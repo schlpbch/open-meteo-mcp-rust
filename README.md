@@ -229,5 +229,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ---
 
 **Maintained by**: [@schlpbch](https://github.com/schlpbch)
-**Status**: ✅ v2.0.0 - Production Ready
+**Status**: ✅ v1.0.0 - Production Ready
 **Last Updated**: February 2026
