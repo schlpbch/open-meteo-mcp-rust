@@ -1,0 +1,42 @@
+# Cargo
+/target/
+Cargo.lock
+**/*.rs.bk
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Test coverage
+coverage/
+*.profraw
+*.profdata
+tarpaulin-report.html
+cobertura.xml
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+.rlib
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE backup files
+*~
+*.bak
+*.swp
+.idea/
+.vscode/settings.json

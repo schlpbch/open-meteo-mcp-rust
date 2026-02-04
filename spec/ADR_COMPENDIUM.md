@@ -1,8 +1,7 @@
 # Architecture Decision Records (ADRs) — Open-Meteo MCP Rust
 
-**Project:** `open-meteo-mcp-rust`
-**Status:** Initial ADRs for v0.1.0
-**Last Updated:** 2026-02-04
+**Project:** `open-meteo-mcp-rust` **Status:** Initial ADRs for v0.1.0 **Last
+Updated:** 2026-02-04
 
 ---
 
@@ -10,16 +9,18 @@
 
 **Status:** ACCEPTED
 
-**Context:**
-Rust has multiple async runtimes: tokio, async-std, embassy, glommio. The Java project uses Spring's `VirtualThreads` for lightweight concurrency. We need a runtime that:
+**Context:** Rust has multiple async runtimes: tokio, async-std, embassy,
+glommio. The Java project uses Spring's `VirtualThreads` for lightweight
+concurrency. We need a runtime that:
+
 - Handles 100+ concurrent MCP clients
 - Works with most async libraries (serde, reqwest, axum, rmcp)
 - Has excellent performance and production maturity
 
-**Decision:**
-Use **Tokio 1.x** as the primary async runtime.
+**Decision:** Use **Tokio 1.x** as the primary async runtime.
 
 **Rationale:**
+
 - De facto standard in Rust ecosystem (98% of async crates)
 - Excellent performance: ~100ns per task spawn
 - Production-proven: Discord, Cloudflare, AWS use Tokio
@@ -27,12 +28,14 @@ Use **Tokio 1.x** as the primary async runtime.
 - Strong community and regular updates
 
 **Consequences:**
+
 - ✅ Can use Tokio features: `spawn`, `select!`, `join!`
 - ✅ Simplified dependency management
 - ❌ Not suitable for real-time/hard-latency systems (use embassy for that)
 - ❌ Single-threaded event loop (but multi-threaded mode available)
 
 **Alternatives Considered:**
+
 - **async-std**: Smaller, but less mature; fewer ecosystem integrations
 - **embassy**: Designed for embedded systems, overkill for server
 - **glommio**: Thread-per-core model, but requires significant refactoring
@@ -45,18 +48,21 @@ Use **Tokio 1.x** as the primary async runtime.
 
 **Status:** ACCEPTED
 
-**Context:**
-The Java version uses Spring's `WebClient` (single pool) and virtual threads for request handling. In Rust, we need a clear model for:
+**Context:** The Java version uses Spring's `WebClient` (single pool) and
+virtual threads for request handling. In Rust, we need a clear model for:
+
 - How many concurrent requests to allow
 - Connection pooling strategy
 - Per-request overhead
 
 **Decision:**
+
 - Single shared `reqwest::Client` (Arc<Client>) with built-in connection pooling
 - Spawn a Tokio task per MCP request (lightweight, <1KB each)
 - Default to 64 concurrent requests, configurable via env var
 
 **Rationale:**
+
 - `reqwest::Client` is thread-safe and reuses HTTP connections
 - Tokio tasks are ~100x lighter than OS threads
 - Backpressure: if too many requests, queue them gracefully
@@ -82,12 +88,15 @@ impl OpenMeteoService {
 ```
 
 **Consequences:**
+
 - ✅ Automatic backpressure via Tokio queue
 - ✅ Minimal memory overhead per request
-- ❌ If one request blocks, others can progress (but kernel scheduler will rebalance)
+- ❌ If one request blocks, others can progress (but kernel scheduler will
+  rebalance)
 - ❌ Not ideal for CPU-bound work (but this is I/O-bound)
 
 **Alternatives Considered:**
+
 - Per-request OS thread: 2-8 MB overhead per thread, max ~1000 threads
 - Async channels with bounded queue: More explicit backpressure, more code
 
@@ -99,32 +108,35 @@ impl OpenMeteoService {
 
 **Status:** ACCEPTED
 
-**Context:**
-MCP supports multiple transports for client-server communication:
+**Context:** MCP supports multiple transports for client-server communication:
+
 1. **STDIO** — single bidirectional pipe (Claude Desktop, CLI clients)
 2. **SSE** — Server-Sent Events (web clients, HTTP)
 3. **Streamable HTTP** (new) — chunked bidirectional HTTP
 
 Each has tradeoffs:
 
-| Transport | Latency | Complexity | Claude Desktop | Web Support | Standardization |
-|-----------|---------|------------|---|---|---|
-| STDIO | <10ms | Low | ✅ Native | ❌ No | ✅ MCP Spec |
-| SSE | 50-200ms | Medium | ✅ Via bridge | ✅ Yes | ✅ HTTP Standard |
-| Stream HTTP | <50ms | High | ✅ Maybe | ✅ Yes | ⚠️ Experimental |
+| Transport   | Latency  | Complexity | Claude Desktop | Web Support | Standardization  |
+| ----------- | -------- | ---------- | -------------- | ----------- | ---------------- |
+| STDIO       | <10ms    | Low        | ✅ Native      | ❌ No       | ✅ MCP Spec      |
+| SSE         | 50-200ms | Medium     | ✅ Via bridge  | ✅ Yes      | ✅ HTTP Standard |
+| Stream HTTP | <50ms    | High       | ✅ Maybe       | ✅ Yes      | ⚠️ Experimental  |
 
 **Decision:**
+
 - **Phase 0-1:** STDIO only (validates end-to-end tool invocation)
 - **Phase 4:** Add SSE transport for web clients
 - **v1.0+:** Defer streamable HTTP; add if user demand exists
 
 **Rationale:**
+
 - STDIO is simplest for initial bringup
 - SSE is proven, widely used, HTTP-standard
 - Streamable HTTP in `rmcp` is still experimental; not recommended for v0.1
 - Can switch to streamable HTTP later without breaking clients
 
 **Consequences:**
+
 - ✅ STDIO gets product to Claude Desktop quickly
 - ✅ SSE enables web/remote clients
 - ❌ Streamable HTTP deferred (can add v0.2)
@@ -164,6 +176,7 @@ transport.run(server).await?;
 ```
 
 **Alternatives Considered:**
+
 - Streamable HTTP from day one: Adds complexity, `rmcp` support is experimental
 - Custom HTTP implementation: Reinvents the wheel, security risk
 
@@ -175,16 +188,17 @@ transport.run(server).await?;
 
 **Status:** ACCEPTED
 
-**Context:**
-The `rmcp` crate is the official Rust SDK for MCP (merged from 4t145/rmcp). Alternatives:
+**Context:** The `rmcp` crate is the official Rust SDK for MCP (merged from
+4t145/rmcp). Alternatives:
+
 - Official `rmcp`: Maintained, `#[tool]` macro, tokio-based
 - Custom MCP implementation: Full control, but 2-3 weeks dev time
 - Other community forks: Unclear maintenance status
 
-**Decision:**
-Use **official `rmcp` 0.3+** from `modelcontextprotocol/rust-sdk`.
+**Decision:** Use **official `rmcp` 0.3+** from `modelcontextprotocol/rust-sdk`.
 
 **Rationale:**
+
 - Official endorsement from Anthropic
 - `#[tool]` macro maps cleanly to `@Tool` in Spring AI
 - Built on Tokio (aligns with ADR-001)
@@ -199,6 +213,7 @@ rmcp = { version = "0.3", features = ["server", "transport-io", "transport-sse-s
 ```
 
 **Consequences:**
+
 - ✅ Official protocol compliance guaranteed
 - ✅ Macro-based tool definition is elegant
 - ✅ Automatic protocol version negotiation
@@ -206,11 +221,13 @@ rmcp = { version = "0.3", features = ["server", "transport-io", "transport-sse-s
 - ❌ If rmcp has a bug, we wait for fix or fork
 
 **Version Pinning Strategy:**
+
 - Pin to `0.3` (semver: allows 0.3.x patches)
 - Review breaking changes in 0.4+ before upgrade
 - Maintain compatibility shim in `src/rmcp_compat.rs` if needed
 
 **Alternatives Considered:**
+
 - Custom implementation: ~1000 LOC, but reinvents JSON-RPC, protocol handling
 - Forking `rmcp`: Support burden, duplicated effort
 
@@ -222,27 +239,28 @@ rmcp = { version = "0.3", features = ["server", "transport-io", "transport-sse-s
 
 **Status:** ACCEPTED
 
-**Context:**
-Should we use a Cargo workspace from day one, or start monolithic?
+**Context:** Should we use a Cargo workspace from day one, or start monolithic?
 
-| Approach | Pros | Cons |
-|----------|------|------|
-| Monolithic | Simple, fast builds, fewer interdeps | Can get unwieldy at 5K+ LOC |
-| Workspace | Modular, parallel builds, reusable libs | Overhead, interdep complexity early |
+| Approach   | Pros                                    | Cons                                |
+| ---------- | --------------------------------------- | ----------------------------------- |
+| Monolithic | Simple, fast builds, fewer interdeps    | Can get unwieldy at 5K+ LOC         |
+| Workspace  | Modular, parallel builds, reusable libs | Overhead, interdep complexity early |
 
-**Decision:**
-Start with **monolithic crate** (Phase 0-5), reevaluate at v1.0.
+**Decision:** Start with **monolithic crate** (Phase 0-5), reevaluate at v1.0.
 
 **Rationale:**
+
 - Single `Cargo.toml` is simpler for initial development
 - ~2000 LOC fits comfortably in one crate
 - No premature modularization
 - Easier to refactor later if needed
 
 **When to split into workspace:**
+
 - Single crate exceeds 5000 LOC
 - Separate client library requested by users
-- Multiple backends needed (e.g., `open-meteo-mcp-core`, `open-meteo-mcp-server`)
+- Multiple backends needed (e.g., `open-meteo-mcp-core`,
+  `open-meteo-mcp-server`)
 
 **Expected Structure (v0.1):**
 
@@ -260,12 +278,14 @@ open-meteo-mcp/
 ```
 
 **Consequences:**
+
 - ✅ Simple dependency resolution
 - ✅ Fast to build and iterate
 - ❌ All features in one binary (can't do lightweight client-only install)
 - ❌ Testing tools separately harder
 
 **Alternatives Considered:**
+
 - Workspace from v0.1: Extra management overhead for ~500 LOC codebase
 - Submodules: Git complexity, not Rust idiomatic
 
@@ -277,20 +297,21 @@ open-meteo-mcp/
 
 **Status:** ACCEPTED
 
-**Context:**
-How to distribute the binary? Options:
+**Context:** How to distribute the binary? Options:
+
 1. **GitHub Releases only** — simple, works for early versions
 2. **crates.io** — discoverable, `cargo install`, but source build
 3. **cargo-binstall** — pre-built binaries, one-command install
 4. **Homebrew/package managers** — distribution but maintenance burden
 
-**Decision:**
-Phased approach:
+**Decision:** Phased approach:
+
 - **v0.1** (Beta): GitHub Releases only + Docker
 - **v0.2** (RC): Add crates.io publishing
 - **v1.0** (Stable): Add cargo-binstall
 
 **Rationale:**
+
 - v0.1 is experimental; GitHub Releases sufficient
 - v0.2 adds stability; publish to crates.io
 - v1.0 is production; cargo-binstall gives users instant install
@@ -321,6 +342,7 @@ cargo binstall open-meteo-mcp  # Download pre-built, 1 second install
 ```
 
 **Consequences:**
+
 - ✅ Low overhead for v0.1 (GitHub only)
 - ✅ Discoverability at v0.2 (crates.io)
 - ✅ Frictionless install at v1.0 (cargo-binstall)
@@ -328,6 +350,7 @@ cargo binstall open-meteo-mcp  # Download pre-built, 1 second install
 - ❌ May need to maintain binaries on multiple platforms
 
 **Alternatives Considered:**
+
 - crates.io from v0.1: Adds complexity, users expect stability
 - Homebrew from v0.1: Maintenance burden, macOS-only initially
 
@@ -339,14 +362,14 @@ cargo binstall open-meteo-mcp  # Download pre-built, 1 second install
 
 **Status:** ACCEPTED
 
-**Context:**
-We need automated builds for multiple targets (Linux x86_64, macOS ARM64, Windows x86_64). Options:
+**Context:** We need automated builds for multiple targets (Linux x86_64, macOS
+ARM64, Windows x86_64). Options:
+
 - GitHub Actions (free, cross-compile via `cross`)
 - Manual release builds (error-prone)
 - Other CI (GitLab, CircleCI, cost)
 
-**Decision:**
-Use **GitHub Actions** with `cross` crate for cross-compilation.
+**Decision:** Use **GitHub Actions** with `cross` crate for cross-compilation.
 
 **Build Matrix:**
 
@@ -364,6 +387,7 @@ strategy:
 ```
 
 **Rationale:**
+
 - GitHub Actions free tier covers our needs
 - `cross` crate simplifies cross-compilation (no manual toolchain setup)
 - Automated on every tag (v0.1.0, v0.2.0, etc.)
@@ -381,12 +405,14 @@ strategy:
    - (v0.2+) Publishes to crates.io
 
 **Consequences:**
+
 - ✅ Automated, reliable releases
 - ✅ Consistent builds across platforms
 - ❌ 10-15 min per release (time to compile all targets)
 - ❌ Requires GitHub Actions credit (free tier sufficient)
 
 **Alternatives Considered:**
+
 - Manual release builds: Error-prone, hard to reproduce
 - CI/CD service (CircleCI, etc.): Cost, complexity
 
@@ -398,14 +424,15 @@ strategy:
 
 **Status:** ACCEPTED
 
-**Context:**
-How to define MCP tools? The `rmcp` crate provides `#[tool]` macro which:
+**Context:** How to define MCP tools? The `rmcp` crate provides `#[tool]` macro
+which:
+
 - Generates tool metadata (name, description, parameters)
 - Validates input against JSON schema
 - Returns `CallToolResult`
 
-**Decision:**
-Use **`#[tool]` macro** for all tool definitions, with `serde` for deserialization and `schemars` for schema generation.
+**Decision:** Use **`#[tool]` macro** for all tool definitions, with `serde` for
+deserialization and `schemars` for schema generation.
 
 **Tool Definition Pattern:**
 
@@ -447,11 +474,14 @@ pub async fn get_weather(
 ```
 
 **Parameter Validation Strategy:**
+
 - **Schema validation**: `schemars` auto-generates JSON schema from Rust types
-- **Runtime validation**: Custom validators for domain logic (e.g., coordinate ranges)
+- **Runtime validation**: Custom validators for domain logic (e.g., coordinate
+  ranges)
 - **Deserialization**: `serde` with `#[serde(default)]` for optional fields
 
 **Consequences:**
+
 - ✅ Type-safe, compile-checked tool definitions
 - ✅ Automatic JSON schema generation
 - ✅ Client knows valid parameter ranges upfront
@@ -459,6 +489,7 @@ pub async fn get_weather(
 - ❌ Macro complexity if extended later
 
 **Alternatives Considered:**
+
 - Manual JSON schema: Error-prone, duplicated logic
 - Reflection at runtime: Loses compile-time safety
 
@@ -470,13 +501,14 @@ pub async fn get_weather(
 
 **Status:** ACCEPTED
 
-**Context:**
-Rust errors need to be:
+**Context:** Rust errors need to be:
+
 - User-friendly (tool responses)
 - Debuggable (tracing, logs)
 - Convertible to MCP protocol errors
 
 **Decision:**
+
 - Use **`thiserror`** for domain errors (API errors, validation)
 - Use **`anyhow`** for contextual errors (I/O, config parsing)
 - Convert all to `McpError` at tool boundary
@@ -544,6 +576,7 @@ pub async fn get_weather(
 ```
 
 **Consequences:**
+
 - ✅ Clear error semantics at each layer
 - ✅ Easy to map domain errors to user-facing messages
 - ✅ Automatic stack traces with `anyhow`
@@ -551,6 +584,7 @@ pub async fn get_weather(
 - ❌ Multiple error types (but manageable with type aliases)
 
 **Alternatives Considered:**
+
 - Single error enum: Loses structure, hard to extend
 - `miette` for fancy error reporting: Nice but overkill for MCP
 
@@ -562,14 +596,14 @@ pub async fn get_weather(
 
 **Status:** ACCEPTED
 
-**Context:**
-The Java version uses SLF4J with structured JSON logging. In Rust, we need:
+**Context:** The Java version uses SLF4J with structured JSON logging. In Rust,
+we need:
+
 - Structured JSON logs for production
 - Log levels configurable via env vars
 - Tracing for span-based debugging
 
-**Decision:**
-Use **`tracing`** + **`tracing-subscriber`** with JSON formatter.
+**Decision:** Use **`tracing`** + **`tracing-subscriber`** with JSON formatter.
 
 **Configuration:**
 
@@ -627,6 +661,7 @@ pub async fn get_weather(&self, lat: f64, lon: f64) -> Result<CallToolResult, Mc
 ```
 
 **Consequences:**
+
 - ✅ Structured logs for log aggregation (ELK, Datadog)
 - ✅ Easy filtering by log level, target, fields
 - ✅ Span-based tracing for performance debugging
@@ -634,6 +669,7 @@ pub async fn get_weather(&self, lat: f64, lon: f64) -> Result<CallToolResult, Mc
 - ❌ Slight performance overhead (but negligible)
 
 **Alternatives Considered:**
+
 - `log` crate: Simpler, but less structured
 - `slog`: More heavyweight, over-engineered
 
@@ -645,14 +681,15 @@ pub async fn get_weather(&self, lat: f64, lon: f64) -> Result<CallToolResult, Mc
 
 **Status:** ACCEPTED
 
-**Context:**
-Target: 72% code coverage (parity with Java version). Need strategy for:
+**Context:** Target: 72% code coverage (parity with Java version). Need strategy
+for:
+
 - Unit testing individual tools
 - Integration testing tool → HTTP client → API
 - Mocking external APIs
 
-**Decision:**
-Three-layer testing:
+**Decision:** Three-layer testing:
+
 1. **Unit tests** — Tool logic with mocked client
 2. **Integration tests** — Tool → HTTP client with `wiremock`
 3. **Fixtures** — Recorded API responses for deterministic tests
@@ -749,6 +786,7 @@ async fn test_get_weather_integration() {
 - Tool: `cargo llvm-cov` with `--html` report
 
 **Consequences:**
+
 - ✅ High confidence in correctness
 - ✅ Fixtures allow offline testing
 - ✅ Fast unit tests, deterministic integration tests
@@ -756,6 +794,7 @@ async fn test_get_weather_integration() {
 - ❌ Coverage overhead (some tests are redundant)
 
 **Alternatives Considered:**
+
 - Only unit tests: Misses integration bugs
 - Only integration tests: Slow, flaky if APIs change
 
@@ -767,18 +806,20 @@ async fn test_get_weather_integration() {
 
 **Status:** ACCEPTED
 
-**Context:**
-Rust crate ecosystem is vast. We need a policy for:
+**Context:** Rust crate ecosystem is vast. We need a policy for:
+
 - How many direct dependencies?
 - Version pinning strategy?
 - Security updates?
 
 **Decision:**
+
 - Target **≤30 direct dependencies** (vs. 100+ in Maven)
 - Pin **major versions** (allow minor/patch)
 - **Audit monthly** via `cargo-audit`, **check security advisories weekly**
 
 **Dependency Philosophy:**
+
 - Use `std` library where possible (don't add crate for 50 LOC)
 - Prefer smaller, focused crates (e.g., `thiserror` not `eyre`)
 - Avoid beta/pre-release deps
@@ -822,6 +863,7 @@ cargo audit && cargo outdated
 ```
 
 **Consequences:**
+
 - ✅ Small dependency tree = less surface area
 - ✅ Faster builds (fewer crates to compile)
 - ✅ Easier to audit and maintain
@@ -829,6 +871,7 @@ cargo audit && cargo outdated
 - ❌ May need to implement small utilities
 
 **Alternatives Considered:**
+
 - Minimal deps (only std + rmcp): Reinvents too much (HTTP, JSON, etc.)
 - Max deps (add every useful crate): Bloated, security risk
 
@@ -838,20 +881,20 @@ cargo audit && cargo outdated
 
 ## Summary Table
 
-| ADR | Title | Decision | Status |
-|-----|-------|----------|--------|
-| 001 | Async Runtime | Tokio 1.x | ACCEPTED |
-| 002 | Concurrency Model | Per-request tasks, shared client | ACCEPTED |
-| 003 | Transport Layer | STDIO→Phase 0, SSE→Phase 4, defer Stream HTTP | ACCEPTED |
-| 004 | MCP SDK | Official `rmcp` 0.3+ | ACCEPTED |
-| 005 | Code Organization | Monolithic v0.1, workspace at v1.0+ | ACCEPTED |
-| 006 | Release Strategy | GH Releases v0.1, crates.io v0.2+, cargo-binstall v1.0+ | ACCEPTED |
-| 007 | CI/CD | GitHub Actions + cross-compilation | ACCEPTED |
-| 008 | Tool Definition | `#[tool]` macro + serde + schemars | ACCEPTED |
-| 009 | Error Handling | `thiserror` + `anyhow`, convert to `McpError` | ACCEPTED |
-| 010 | Logging | Structured JSON with `tracing` | ACCEPTED |
-| 011 | Testing | Unit + Integration + Fixtures, target 72% coverage | ACCEPTED |
-| 012 | Dependencies | ≤30 direct, pin major versions, audit monthly | ACCEPTED |
+| ADR | Title             | Decision                                                | Status   |
+| --- | ----------------- | ------------------------------------------------------- | -------- |
+| 001 | Async Runtime     | Tokio 1.x                                               | ACCEPTED |
+| 002 | Concurrency Model | Per-request tasks, shared client                        | ACCEPTED |
+| 003 | Transport Layer   | STDIO→Phase 0, SSE→Phase 4, defer Stream HTTP           | ACCEPTED |
+| 004 | MCP SDK           | Official `rmcp` 0.3+                                    | ACCEPTED |
+| 005 | Code Organization | Monolithic v0.1, workspace at v1.0+                     | ACCEPTED |
+| 006 | Release Strategy  | GH Releases v0.1, crates.io v0.2+, cargo-binstall v1.0+ | ACCEPTED |
+| 007 | CI/CD             | GitHub Actions + cross-compilation                      | ACCEPTED |
+| 008 | Tool Definition   | `#[tool]` macro + serde + schemars                      | ACCEPTED |
+| 009 | Error Handling    | `thiserror` + `anyhow`, convert to `McpError`           | ACCEPTED |
+| 010 | Logging           | Structured JSON with `tracing`                          | ACCEPTED |
+| 011 | Testing           | Unit + Integration + Fixtures, target 72% coverage      | ACCEPTED |
+| 012 | Dependencies      | ≤30 direct, pin major versions, audit monthly           | ACCEPTED |
 
 ---
 
@@ -861,4 +904,3 @@ cargo audit && cargo outdated
 2. Proceed with Phase 0 implementation (Scaffolding)
 3. Create GitHub issues for each phase
 4. Document ADRs in project repo (spec/ADR_COMPENDIUM.md)
-

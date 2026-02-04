@@ -1,0 +1,67 @@
+[package]
+name = "open-meteo-mcp"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+description = "Weather and climate data via Open-Meteo API as an MCP server"
+license = "Apache-2.0"
+repository = "https://github.com/schlpbch/open-meteo-mcp-rust"
+keywords = ["mcp", "weather", "open-meteo", "climate"]
+authors = ["Andreas Schlapbach <schlpbch@gmail.com>"]
+
+[dependencies]
+# MCP Protocol — official Rust SDK
+rmcp = { version = "0.3", features = ["server", "transport-io"] }
+
+# Async runtime
+tokio = { version = "1.40", features = ["full"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "gzip"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+schemars = { version = "1.0", features = ["preserve_order"] }
+
+# Web server (SSE) — Phase 4
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "compression-gzip"] }
+
+# Error handling
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Configuration
+dotenvy = "0.15"
+envy = "0.4"
+
+# Logging
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
+
+# CLI
+clap = { version = "4.5", features = ["derive", "env"] }
+
+# Futures utilities
+futures = "0.3"
+
+[dev-dependencies]
+mockall = "0.13"
+wiremock = "0.6"
+tokio-test = "0.4"
+assert_json_diff = "2.0"
+
+[profile.release]
+opt-level = "z"      # Optimize for size
+lto = true           # Link-time optimization
+codegen-units = 1    # Better optimization but slower compilation
+strip = true         # Strip debug symbols
+
+[[bin]]
+name = "open-meteo-mcp"
+path = "src/main.rs"

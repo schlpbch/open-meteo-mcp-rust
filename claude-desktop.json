@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "open-meteo": {
+      "command": "/path/to/open-meteo-mcp",
+      "args": ["--transport", "stdio"],
+      "env": {
+        "LOG_LEVEL": "info"
+      }
+    }
+  }
+}
