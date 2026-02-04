@@ -3,6 +3,8 @@
 //! A Model Context Protocol (MCP) server providing weather, snow, air quality,
 //! and location data via the Open-Meteo API.
 
+mod server;
+
 use clap::Parser;
 use open_meteo_mcp::{Config, OpenMeteoService};
 use tracing_subscriber::EnvFilter;
@@ -70,8 +72,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Select transport mode
     match args.transport.as_str() {
-        "stdio" => run_stdio().await?,
-        "sse" => run_sse(args.port).await?,
+        "stdio" => run_stdio(service).await?,
+        "sse" => run_sse(service, args.port).await?,
         _ => {
             tracing::error!(transport = %args.transport, "Unknown transport mode");
             return Err(format!("Unknown transport: {}", args.transport).into());
@@ -81,21 +83,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn run_stdio() -> Result<(), Box<dyn std::error::Error>> {
+async fn run_stdio(service: OpenMeteoService) -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Using STDIO transport for Claude Desktop");
 
-    // TODO: Phase 1 - Implement full rmcp server with STDIO transport
-    tracing::info!("Phase 0: STDIO transport initialized (tools will be added in Phase 1)");
+    // Phase 3: Run the MCP server with STDIO transport
+    server::run_mcp_server(service).await?;
 
-    // For now, keep the process alive
-    // In Phase 1, this will run the actual MCP server
-    tokio::signal::ctrl_c().await?;
-    tracing::info!("Shutdown signal received");
+    tracing::info!("MCP server shutdown complete");
 
     Ok(())
 }
 
-async fn run_sse(port: u16) -> Result<(), Box<dyn std::error::Error>> {
+async fn run_sse(
+    _service: OpenMeteoService,
+    port: u16,
+) -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!(port = port, "Using SSE transport");
 
     // TODO: Phase 4 - Implement axum server with SSE transport

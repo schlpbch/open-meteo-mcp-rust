@@ -9,6 +9,8 @@ pub mod error;
 pub mod service;
 pub mod tools;
 pub mod types;
+pub mod resources;
+pub mod prompts;
 
 pub use client::OpenMeteoClient;
 pub use config::Config;
