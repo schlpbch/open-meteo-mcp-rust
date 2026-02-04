@@ -1,0 +1,19 @@
+{
+  "folders": [
+    {
+      "path": "../open-meteo-mcp-java",
+    },
+    {
+      "path": ".",
+    },
+    {
+      "path": "../open-meteo-mcp-ts",
+    },
+    {
+      "path": "../open-meteo-mcp-py",
+    },
+  ],
+  "settings": {
+    "java.configuration.updateBuildConfiguration": "automatic",
+  },
+}
