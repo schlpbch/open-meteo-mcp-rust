@@ -137,11 +137,11 @@ mod tests {
     }
 
     #[test]
-    fn test_config_validation_invalid_port() {
+    fn test_config_validation_empty_host() {
         let config = TransportConfig {
             mode: TransportMode::Sse {
-                host: "127.0.0.1".to_string(),
-                port: 70000,
+                host: String::new(),
+                port: 8888,
             },
             timeout_secs: 30,
             health_check_interval_secs: 30,

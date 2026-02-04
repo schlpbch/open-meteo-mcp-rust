@@ -42,8 +42,6 @@ pub async fn run_stdio_server(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[tokio::test]
     async fn test_stdio_module_loads() {
         // Basic test to verify module can be imported

@@ -178,11 +178,12 @@ mod tests {
     fn test_health_checker_creation() {
         let checker = HealthChecker::new(30);
         assert_eq!(checker.check_liveness(), HealthStatus::Healthy);
-        assert!(checker.get_uptime_secs() >= 0);
+        let _uptime = checker.get_uptime_secs();
     }
 
     #[test]
     fn test_uptime_tracking() {
+        use std::time::Duration;
         let checker = HealthChecker::new(30);
         let uptime1 = checker.get_uptime_secs();
         std::thread::sleep(Duration::from_millis(100));
