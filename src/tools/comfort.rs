@@ -28,7 +28,7 @@ impl OpenMeteoService {
         let req = ComfortRequest {
             latitude,
             longitude,
-            activity_type,
+            activity_type: activity_type.clone(),
             forecast_days,
         };
 
@@ -57,7 +57,7 @@ impl OpenMeteoService {
         };
 
         let weather_response = self
-            .client
+            .api_client()
             .get_weather(&weather_req)
             .await
             .map_err(|e| match e {

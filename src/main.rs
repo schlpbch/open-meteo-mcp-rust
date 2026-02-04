@@ -57,12 +57,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // Test ping tool
     match service.ping().await {
-        Ok(ping_response) => {
-            tracing::info!(
-                message = ping_response.message,
-                timestamp = ping_response.timestamp,
-                "Ping tool validation successful"
-            );
+        Ok(ping_result) => {
+            if !ping_result.is_error && !ping_result.content.is_empty() {
+                tracing::info!("Ping tool validation successful");
+            } else {
+                tracing::error!("Ping tool returned error response");
+                return Err("Ping tool validation failed".into());
+            }
         }
         Err(e) => {
             tracing::error!(error = ?e, "Ping tool validation failed");

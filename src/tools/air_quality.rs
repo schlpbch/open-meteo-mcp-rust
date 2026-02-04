@@ -44,7 +44,7 @@ impl OpenMeteoService {
 
         // Get air quality data
         let response = self
-            .client
+            .api_client()
             .get_air_quality(&req)
             .await
             .map_err(|e| match e {

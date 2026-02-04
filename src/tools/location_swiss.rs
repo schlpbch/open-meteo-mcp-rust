@@ -1,7 +1,7 @@
 //! Swiss location search tool
 
 use crate::service::OpenMeteoService;
-use crate::types::location::GeocodeRequest;
+use crate::types::location::{GeocodeRequest, Location};
 use crate::{CallToolResult, McpError, ToolContent};
 
 impl OpenMeteoService {
@@ -17,7 +17,7 @@ impl OpenMeteoService {
     pub async fn search_location_swiss(
         &self,
         name: String,
-        count: Option<u8>,
+        count: Option<u32>,
     ) -> std::result::Result<CallToolResult, McpError> {
         // Build request with Swiss country filter
         let mut req = GeocodeRequest {
@@ -40,7 +40,7 @@ impl OpenMeteoService {
 
         // Search for locations (in real implementation, would filter by Switzerland)
         let response = self
-            .client
+            .api_client()
             .search_location(&req)
             .await
             .map_err(|e| match e {
@@ -58,7 +58,7 @@ impl OpenMeteoService {
             })?;
 
         // Filter results to Swiss locations only
-        let swiss_results = response.results.into_iter()
+        let swiss_results: Vec<Location> = response.results.into_iter()
             .filter(|loc| {
                 loc.country_code.as_ref().map(|c| c == "CH").unwrap_or(false)
                     || loc.country.as_ref().map(|c| c.contains("Switzerland")).unwrap_or(false)

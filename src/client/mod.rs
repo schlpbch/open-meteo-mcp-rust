@@ -21,7 +21,7 @@ pub struct OpenMeteoClient {
 }
 
 #[derive(Clone, Debug)]
-struct BaseUrls {
+pub(crate) struct BaseUrls {
     pub weather: String,
     pub geocoding: String,
     pub air_quality: String,
@@ -51,7 +51,8 @@ impl OpenMeteoClient {
     }
 
     /// Create a new OpenMeteoClient with custom base URLs (for testing)
-    pub fn with_base_urls(http_client: Arc<reqwest::Client>, base_urls: BaseUrls) -> Self {
+    #[allow(dead_code)]
+    pub(crate) fn with_base_urls(http_client: Arc<reqwest::Client>, base_urls: BaseUrls) -> Self {
         Self {
             http_client,
             base_urls,

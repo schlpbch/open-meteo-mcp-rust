@@ -44,7 +44,7 @@ impl OpenMeteoService {
 
         // Fetch historical data
         let response = self
-            .client
+            .api_client()
             .get_historical_weather(&WeatherRequest {
                 latitude,
                 longitude,

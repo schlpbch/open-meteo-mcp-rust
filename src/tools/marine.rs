@@ -47,7 +47,7 @@ impl OpenMeteoService {
 
         // Get marine data
         let response = self
-            .client
+            .api_client()
             .get_marine_conditions(&req)
             .await
             .map_err(|e| match e {

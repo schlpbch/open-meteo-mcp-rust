@@ -3,7 +3,6 @@
 use crate::service::OpenMeteoService;
 use crate::types::weather::WeatherRequest;
 use crate::{CallToolResult, McpError, ToolContent};
-use serde_json::json;
 
 impl OpenMeteoService {
     /// Get weather forecast data for a location
@@ -51,7 +50,7 @@ impl OpenMeteoService {
 
         // Get weather data
         let response = self
-            .client
+            .api_client()
             .get_weather(&req)
             .await
             .map_err(|e| match e {

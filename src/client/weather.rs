@@ -1,7 +1,7 @@
 //! Weather API client
 
 use crate::types::weather::{WeatherRequest, WeatherResponse};
-use crate::{Error, Result};
+use crate::Result;
 use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {

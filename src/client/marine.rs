@@ -1,7 +1,7 @@
 //! Marine API client (waves, swells)
 
 use crate::types::marine::{MarineRequest, MarineResponse};
-use crate::{Error, Result};
+use crate::Result;
 use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {

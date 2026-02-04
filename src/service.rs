@@ -2,7 +2,7 @@
 
 use crate::client::OpenMeteoClient;
 use crate::config::Config;
-use crate::{Error, Result};
+use crate::Result;
 use std::sync::Arc;
 
 /// Main Open-Meteo MCP service

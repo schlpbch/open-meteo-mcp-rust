@@ -1,7 +1,7 @@
 //! Air Quality API client
 
 use crate::types::air_quality::{AirQualityRequest, AirQualityResponse};
-use crate::{Error, Result};
+use crate::Result;
 use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {

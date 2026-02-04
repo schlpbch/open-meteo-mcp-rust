@@ -16,7 +16,7 @@ impl OpenMeteoService {
     pub async fn search_location(
         &self,
         name: String,
-        count: Option<u8>,
+        count: Option<u32>,
         language: Option<String>,
     ) -> std::result::Result<CallToolResult, McpError> {
         // Build request
@@ -35,7 +35,7 @@ impl OpenMeteoService {
 
         // Search for locations
         let response = self
-            .client
+            .api_client()
             .search_location(&req)
             .await
             .map_err(|e| match e {

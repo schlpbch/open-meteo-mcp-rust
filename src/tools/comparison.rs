@@ -1,7 +1,6 @@
 //! Location comparison tool (multi-location weather)
 
 use crate::service::OpenMeteoService;
-use crate::types::comparison::{ComparisonRequest, LocationCoords};
 use crate::{CallToolResult, McpError, ToolContent};
 
 impl OpenMeteoService {
@@ -54,7 +53,7 @@ impl OpenMeteoService {
                 ..Default::default()
             };
 
-            match self.client.get_weather(&req).await {
+            match self.api_client().get_weather(&req).await {
                 Ok(weather) => {
                     location_weathers.push(serde_json::json!({
                         "latitude": latitude,

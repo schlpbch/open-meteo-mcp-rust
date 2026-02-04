@@ -27,8 +27,8 @@ impl OpenMeteoService {
         let req = SnowRequest {
             latitude,
             longitude,
-            hourly,
-            daily,
+            hourly: hourly.clone(),
+            daily: daily.clone(),
             forecast_days,
             ..Default::default()
         };
@@ -56,7 +56,7 @@ impl OpenMeteoService {
         };
 
         let response = self
-            .client
+            .api_client()
             .get_weather(&weather_req)
             .await
             .map_err(|e| match e {

@@ -35,6 +35,11 @@ impl OpenMeteoService {
             .as_ref()
             .map(|d| format!("on {}", d))
             .unwrap_or_default();
+        let dates_for_format = if date_info.is_empty() {
+            "the requested dates".to_string()
+        } else {
+            dates.unwrap_or_default()
+        };
 
         let prompt = format!(
             r#"# Ski Trip Weather Planning {} {}
@@ -100,11 +105,7 @@ Based on {}:
 "#,
             resort_info,
             date_info,
-            if date_info.is_empty() {
-                "the requested dates"
-            } else {
-                &dates.unwrap_or_default()
-            }
+            dates_for_format
         );
 
         tracing::debug!("Generating ski trip weather prompt");

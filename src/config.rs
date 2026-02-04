@@ -1,7 +1,6 @@
 //! Configuration management
 
 use serde::Deserialize;
-use std::env;
 
 /// Application configuration loaded from environment variables
 #[derive(Debug, Clone, Deserialize)]
