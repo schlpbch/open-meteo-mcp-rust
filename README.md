@@ -1,10 +1,32 @@
 # Open-Meteo MCP (Rust)
 
+[![Status: Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen?style=flat-square)](https://github.com/schlpbch/open-meteo-mcp-rust/releases/tag/v2.0.0)
+[![Tests: 258](https://img.shields.io/badge/tests-258%20passing-brightgreen?style=flat-square)](tests/)
+[![Coverage: 72%](https://img.shields.io/badge/coverage-72%25-brightgreen?style=flat-square)](ARCHITECTURE.md)
+[![Rust: 1.75+](https://img.shields.io/badge/rust-1.75%2B-orange?style=flat-square)](https://www.rust-lang.org/)
+[![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
+[![Docker: 26.4 MB](https://img.shields.io/badge/docker-26.4%20MB-blueviolet?style=flat-square)](Dockerfile)
+
 A lightweight, high-performance Model Context Protocol (MCP) server providing weather, snow conditions, air quality, and location data via the [Open-Meteo API](https://open-meteo.com/).
 
 **Rust port of [open-meteo-mcp-java](https://github.com/schlpbch/open-meteo-mcp-java)** — featuring a 26.4 MB Docker image with <100ms cold start and 258 comprehensive tests.
 
 **Status**: ✅ v2.0.0 - Production Ready | 72% test coverage | Feature-complete parity with Java v2.0.2
+
+---
+
+## ✨ Highlights
+
+- ⚡ **Sub-100ms Cold Start** — Lightning-fast initialization
+- 📦 **26.4 MB Docker Image** — Lightweight distribution
+- 🎯 **11 MCP Tools** — Complete weather & climate toolkit
+- 🧪 **258 Comprehensive Tests** — Production-grade quality assurance
+- 🔄 **STDIO + SSE Transports** — Flexible deployment options
+- 🦀 **Pure Rust** — Type-safe, memory-efficient, no GC pauses
+- 📊 **Connection Pooling** — High-performance HTTP client with retry logic
+- 🌍 **Open-Meteo API** — Free, reliable weather data source
+
+---
 
 ## Quick Start
 
