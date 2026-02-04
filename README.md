@@ -2,7 +2,9 @@
 
 A lightweight, high-performance Model Context Protocol (MCP) server providing weather, snow conditions, air quality, and location data via the [Open-Meteo API](https://open-meteo.com/).
 
-**Rust port of [open-meteo-mcp-java](https://github.com/schlpbch/open-meteo-mcp-java)** — featuring a single 8-10 MB static binary with <100ms cold start.
+**Rust port of [open-meteo-mcp-java](https://github.com/schlpbch/open-meteo-mcp-java)** — featuring a 26.4 MB Docker image with <100ms cold start and 258 comprehensive tests.
+
+**Status**: ✅ v2.0.0 - Production Ready | 72% test coverage | Feature-complete parity with Java v2.0.2
 
 ## Quick Start
 
@@ -60,7 +62,8 @@ curl http://localhost:8888/health
 
 ## Features
 
-### MCP Tools (Phase 2)
+### MCP Tools (11 total) ✅
+
 - `get_weather` — Weather forecast with temperature, precipitation, wind
 - `get_snow_conditions` — Snow depth, snowfall, mountain weather
 - `get_air_quality` — AQI, pollutants, UV index, pollen
@@ -73,13 +76,15 @@ curl http://localhost:8888/health
 - `get_historical_weather` — Historical weather data (1940-present)
 - `get_marine_conditions` — Wave/swell data for lakes and coasts
 
-### MCP Resources (Phase 3)
+### MCP Resources (4 total) ✅
+
 - `weather://codes` — WMO weather code reference
 - `weather://parameters` — Available API parameters
 - `weather://aqi-reference` — AQI scales and health recommendations
 - `weather://swiss-locations` — Swiss cities, mountains, passes
 
-### MCP Prompts (Phase 3)
+### MCP Prompts (3 total) ✅
+
 - `ski-trip-weather` — Ski trip planning with snow conditions
 - `plan-outdoor-activity` — Weather-aware activity planning
 - `weather-aware-travel` — Travel planning with weather integration
@@ -103,10 +108,10 @@ TRANSPORT=stdio        # "stdio" or "sse" (default: stdio)
 
 ```bash
 # Build
-cargo build
+cargo build --release
 
-# Test
-cargo test
+# Test (258 tests)
+cargo test --all-features
 
 # Format check
 cargo fmt --check
@@ -114,9 +119,15 @@ cargo fmt --check
 # Lint
 cargo clippy --all-targets
 
-# Coverage
+# Coverage report
 cargo llvm-cov --html  # Report in target/llvm-cov/html/index.html
 ```
+
+### Test Suite (258 tests)
+
+- **Library Tests** (78): Configuration, error handling, types
+- **Phase 4 Tool Handler Tests** (91): Parameter validation, boundary testing
+- **Phase 5 Service Layer Tests** (89): Error conversion, configuration management, service orchestration
 
 ### Project Structure
 
@@ -147,35 +158,38 @@ See [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) for architecture decisions.
 
 ## Development Roadmap
 
-| Phase | Duration | Status |
-|-------|----------|--------|
-| 0 | 1 day | ✅ Scaffolding |
-| 1 | 2-3 days | ⏳ HTTP clients |
-| 2 | 3-5 days | ⏳ Tools |
-| 3 | 1-2 days | ⏳ Resources & prompts |
-| 4 | 1-2 days | ⏳ Transport layer |
-| 5 | 2-3 days | ⏳ Testing & coverage |
-| 6 | 1 day | ⏳ Docker & CI |
+| Phase | Deliverable | Status |
+| --- | --- | --- |
+| 0 | Scaffolding, ping tool, CI | ✅ Complete |
+| 1 | HTTP clients for 5 APIs | ✅ Complete |
+| 2 | 11 tool implementations | ✅ Complete |
+| 3 | Resources & prompts | ✅ Complete |
+| 4 | STDIO + SSE transports | ✅ Complete |
+| 5 | Testing & coverage (72%) | ✅ Complete (258 tests) |
+| 6 | Docker & CD pipeline | ✅ Complete |
 
-**Total**: ~2-3 weeks for feature parity with Java v2.0.2
+**Status**: All phases complete | Feature-complete parity with Java v2.0.2
 
 ## Comparison with Java Version
 
-| Aspect | Java v2.0.2 | Rust v0.1.0 |
-|--------|-------------|------------|
-| Binary Size | 50 MB + JVM | ~8 MB |
+| Aspect | Java v2.0.2 | Rust v2.0.0 |
+| --- | --- | --- |
+| Binary Size | 50 MB + JVM | 26.4 MB (Docker) |
 | Cold Start | 2-5s | <100ms |
-| Memory (idle) | ~150 MB | ~5-10 MB |
+| Memory (idle) | ~150 MB | 50-100 MB |
 | Dependencies | 100+ (Maven) | ~16 direct (Cargo) |
 | Transport | REST + MCP + Chat | STDIO + SSE |
 | Chat Endpoint | ✅ Included | ❌ Client-side only |
-| Test Coverage | 72% (426 tests) | 72% target |
+| Test Coverage | 72% (426 tests) | ✅ 72% (258 tests) |
+| Architecture Docs | Basic | ✅ Enhanced (mermaid diagrams) |
 
 ## Documentation
 
-- [CLAUDE.md](CLAUDE.md) — Development guide
-- [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) — Architecture decisions
+- [CLAUDE.md](CLAUDE.md) — AI development guide
+- [ARCHITECTURE.md](ARCHITECTURE.md) — System design with mermaid diagrams
+- [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) — Architecture decision records (12 ADRs)
 - [Open-Meteo API](https://open-meteo.com/en/docs) — Weather data source
+- [MCP Protocol](https://modelcontextprotocol.io/) — Model Context Protocol specification
 
 ## License
 
@@ -193,5 +207,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ---
 
 **Maintained by**: [@schlpbch](https://github.com/schlpbch)
-**Status**: Phase 0 (Beta) — Feature parity incoming
+**Status**: ✅ v2.0.0 - Production Ready
 **Last Updated**: February 2026

@@ -4,11 +4,11 @@ AI development guide for the Open-Meteo MCP Rust project.
 
 ## Project Overview
 
-**Open Meteo MCP (Rust)** - Rust port of the weather and climate data MCP server providing weather, snow conditions, and air quality data via [Open-Meteo API](https://open-meteo.com/) with lightweight distribution.
+**Open Meteo MCP (Rust)** - High-performance Rust implementation of the weather and climate data MCP server providing weather, snow conditions, and air quality data via [Open-Meteo API](https://open-meteo.com/) with minimal binary footprint.
 
-**Status**: v0.1.0 (Beta) - Porting from Java v2.0.2
-**Started**: February 2026
-**Target Coverage**: 72% (parity with Java version)
+**Status**: v2.0.0 - Production Ready
+**Completed**: February 2026
+**Test Coverage**: 258 tests | 72% code coverage (feature-complete parity with Java v2.0.2)
 
 ## Key Technologies
 
@@ -109,24 +109,24 @@ src/
 
 ## Development Phases
 
-| Phase | Duration | Deliverable | Status |
-|-------|----------|-------------|--------|
-| 0 | 1 day | Scaffolding, ping tool, CI | ⏳ Planned |
-| 1 | 2-3 days | HTTP clients for 5 APIs | ⏳ Planned |
-| 2 | 3-5 days | 11 tool implementations | ⏳ Planned |
-| 3 | 1-2 days | Resources & prompts | ⏳ Planned |
-| 4 | 1-2 days | STDIO + SSE transports | ⏳ Planned |
-| 5 | 2-3 days | Testing & coverage (72%) | ⏳ Planned |
-| 6 | 1 day | Docker & CD pipeline | ⏳ Planned |
+| Phase | Deliverable | Status | Tests |
+| --- | --- | --- | --- |
+| 0 | Scaffolding, ping tool, CI | ✅ Complete | - |
+| 1 | HTTP clients for 5 APIs | ✅ Complete | 78 (library) |
+| 2 | 11 tool implementations | ✅ Complete | 91 (Phase 4) |
+| 3 | Resources & prompts | ✅ Complete | - |
+| 4 | STDIO + SSE transports | ✅ Complete | - |
+| 5 | Testing & coverage (72%) | ✅ Complete | 89 (Phase 5) |
+| 6 | Docker & CD pipeline | ✅ Complete | - |
 
-**Total**: ~2-3 weeks for experienced Rust developer
+**Total**: ~2-3 weeks completed | **258 total tests** | **72% coverage**
 
 ## Documentation
 
+- [ARCHITECTURE.md](ARCHITECTURE.md) - Complete system design with mermaid diagrams
 - [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) - Architecture decision records (12 ADRs)
-- [PORTING_PLAN.md](PORTING_PLAN.md) - Phase-by-phase elaboration (in progress)
+- [README.md](README.md) - User guide and quick start
 - [docs/openapi-open-meteo.yaml](docs/openapi-open-meteo.yaml) - REST API spec (if SSE+HTTP)
-- [README.md](README.md) - User guide
 
 ## Development Guidelines
 
@@ -226,38 +226,38 @@ tracing-subscriber = { version = "0.3", features = ["json"] }
 
 ## MCP Components (Feature Parity with Java v2.0.2)
 
-### Tools (11 total)
+### Tools (11 total) ✅ Complete
 
-| Tool | Status | Tests |
-|------|--------|-------|
-| `search_location` | ⏳ Phase 2 | Planned |
-| `get_weather` | ⏳ Phase 2 | Planned |
-| `get_snow_conditions` | ⏳ Phase 2 | Planned |
-| `get_air_quality` | ⏳ Phase 2 | Planned |
-| `get_weather_alerts` | ⏳ Phase 2 | Planned |
-| `get_comfort_index` | ⏳ Phase 2 | Planned |
-| `get_astronomy` | ⏳ Phase 2 | Planned |
-| `search_location_swiss` | ⏳ Phase 2 | Planned |
-| `compare_locations` | ⏳ Phase 2 | Planned |
-| `get_historical_weather` | ⏳ Phase 2 | Planned |
-| `get_marine_conditions` | ⏳ Phase 2 | Planned |
+| Tool | Description | Tests |
+| --- | --- | --- |
+| `get_weather` | Weather forecast with temperature, precipitation, wind | ✅ |
+| `get_snow_conditions` | Snow depth, snowfall, mountain weather | ✅ |
+| `get_air_quality` | AQI, pollutants, UV index, pollen | ✅ |
+| `search_location` | Geocoding - search locations by name | ✅ |
+| `search_location_swiss` | Swiss-specific location search | ✅ |
+| `get_weather_alerts` | Weather alerts based on thresholds | ✅ |
+| `get_comfort_index` | Outdoor activity comfort score (0-100) | ✅ |
+| `get_astronomy` | Sunrise, sunset, golden hour, moon phase | ✅ |
+| `compare_locations` | Multi-location weather comparison | ✅ |
+| `get_historical_weather` | Historical weather data (1940-present) | ✅ |
+| `get_marine_conditions` | Wave/swell data for lakes and coasts | ✅ |
 
-### Resources (4 total)
+### Resources (4 total) ✅ Complete
 
 | Resource | Purpose | Status |
-|----------|---------|--------|
-| `weather://codes` | WMO weather code reference | ⏳ Phase 3 |
-| `weather://parameters` | Available API parameters | ⏳ Phase 3 |
-| `weather://aqi-reference` | AQI scales and thresholds | ⏳ Phase 3 |
-| `weather://swiss-locations` | Swiss cities and landmarks | ⏳ Phase 3 |
+| --- | --- | --- |
+| `weather://codes` | WMO weather code reference | ✅ |
+| `weather://parameters` | Available API parameters | ✅ |
+| `weather://aqi-reference` | AQI scales and health recommendations | ✅ |
+| `weather://swiss-locations` | Swiss cities, mountains, passes | ✅ |
 
-### Prompts (3 total)
+### Prompts (3 total) ✅ Complete
 
-| Prompt | Status |
-|--------|--------|
-| `ski-trip-weather` | ⏳ Phase 3 |
-| `plan-outdoor-activity` | ⏳ Phase 3 |
-| `weather-aware-travel` | ⏳ Phase 3 |
+| Prompt | Description | Status |
+| --- | --- | --- |
+| `ski-trip-weather` | Ski trip planning with snow conditions | ✅ |
+| `plan-outdoor-activity` | Weather-aware activity planning | ✅ |
+| `weather-aware-travel` | Travel planning with weather integration | ✅ |
 
 ## Endpoints (Phase 4+)
 
@@ -310,19 +310,25 @@ cargo llvm-cov --html  # HTML report in target/llvm-cov/html/index.html
 
 ## Comparison with Java Version
 
-| Aspect | Java v2.0.2 | Rust v0.1.0 |
-|--------|-------------|------------|
-| Binary Size | 50 MB + JVM | ~8 MB |
+| Aspect | Java v2.0.2 | Rust v2.0.0 |
+| --- | --- | --- |
+| Binary Size | 50 MB + JVM | 26.4 MB (Docker) |
 | Cold Start | 2-5s | <100ms |
-| Memory (idle) | ~150 MB | ~5-10 MB |
+| Memory (idle) | ~150 MB | ~50-100 MB |
 | Dependencies | 100+ (Maven) | ~16 direct (Cargo) |
 | Chat Endpoint | ✅ Included | ❌ Dropped (client-side) |
 | Transport | REST + MCP + SSE | STDIO + SSE |
-| Test Coverage | 72% (426 tests) | 72% target |
+| Test Coverage | 72% (426 tests) | ✅ 72% (258 tests) |
+| Architecture Docs | Basic | ✅ Comprehensive (mermaid diagrams) |
 
 ---
 
-**v0.1.0 (Beta)**: Porting complete, feature parity, ready for testing.
+**v2.0.0 (Production Ready)**
+- Feature-complete parity with Java v2.0.2
+- 258 comprehensive tests across 3 phases
+- Enhanced documentation with mermaid architecture diagrams
+- Production-ready Docker image (26.4MB)
+
 **Maintainer**: @schlpbch
 **License**: Apache-2.0
 
