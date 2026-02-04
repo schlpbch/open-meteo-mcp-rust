@@ -19,6 +19,7 @@ pub struct GeocodeRequest {
 }
 
 impl GeocodeRequest {
+    /// Create a new geocode request with defaults
     pub fn new(name: String) -> Self {
         Self {
             name,
@@ -26,6 +27,30 @@ impl GeocodeRequest {
             language: None,
             format: None,
         }
+    }
+
+    /// Validate geocode request parameters
+    ///
+    /// Checks:
+    /// - name: Not empty
+    /// - count: 1-100 (API limit)
+    pub fn validate(&self) -> crate::Result<()> {
+        if self.name.is_empty() {
+            return Err(crate::Error::InvalidParameter(
+                "Location name cannot be empty".to_string(),
+            ));
+        }
+
+        // Validate result count (API typically limits to 1-100)
+        if let Some(count) = self.count {
+            if count < 1 || count > 100 {
+                return Err(crate::Error::InvalidParameter(
+                    format!("count must be between 1 and 100, got {}", count),
+                ));
+            }
+        }
+
+        Ok(())
     }
 }
 
@@ -112,7 +137,7 @@ mod tests {
             distance_m: None,
         };
 
-        let json = serde_json::to_value(&loc).unwrap();
+        let json = serde_json::to_value(&loc).expect("Valid JSON serialization");
         assert_eq!(json["name"], "Munich");
         assert_eq!(json["latitude"], 48.1);
     }

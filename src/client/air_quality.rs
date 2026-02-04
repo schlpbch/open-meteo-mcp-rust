@@ -78,11 +78,11 @@ mod tests {
             }
         }"#;
 
-        let response: AirQualityResponse = serde_json::from_str(json).unwrap();
+        let response: AirQualityResponse = serde_json::from_str(json).expect("Valid JSON");
         assert_eq!(response.latitude, 48.1);
         assert!(response.hourly.is_some());
 
-        let hourly = response.hourly.unwrap();
+        let hourly = response.hourly.expect("Expected field exists");
         assert_eq!(hourly.time.len(), 2);
         assert_eq!(hourly.pm10, Some(vec![15.5, 16.2]));
     }

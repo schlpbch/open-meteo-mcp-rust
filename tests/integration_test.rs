@@ -23,7 +23,7 @@ async fn test_get_weather_success() {
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
-            .unwrap(),
+            .expect("Valid HTTP client"),
     );
 
     let client = OpenMeteoClient::new(http_client);
@@ -41,7 +41,7 @@ async fn test_get_weather_success() {
     let result = client.get_weather(&req).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = result.expect("Test should not fail");
     assert_eq!(response.latitude, 48.1);
     assert_eq!(response.longitude, 11.6);
     assert_eq!(response.timezone, "Europe/Berlin");
@@ -69,7 +69,7 @@ async fn test_search_location_success() {
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
-            .unwrap(),
+            .expect("Valid HTTP client"),
     );
 
     let client = OpenMeteoClient::new(http_client);
@@ -80,7 +80,7 @@ async fn test_search_location_success() {
     let result = client.search_location(&req).await;
 
     assert!(result.is_ok());
-    let response = result.unwrap();
+    let response = result.expect("Test should not fail");
     assert!(!response.results.is_empty());
 
     // Check first result (Munich, Germany)
@@ -96,7 +96,7 @@ async fn test_invalid_coordinates_rejected() {
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
-            .unwrap(),
+            .expect("Valid HTTP client"),
     );
 
     let client = OpenMeteoClient::new(http_client);
@@ -118,7 +118,7 @@ async fn test_empty_location_name_rejected() {
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
-            .unwrap(),
+            .expect("Valid HTTP client"),
     );
 
     let client = OpenMeteoClient::new(http_client);
@@ -151,7 +151,7 @@ async fn test_http_client_400_error() {
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
             .build()
-            .unwrap(),
+            .expect("Valid HTTP client"),
     );
 
     let client = OpenMeteoClient::new(http_client);

@@ -12,7 +12,7 @@ pub mod types;
 
 pub use client::OpenMeteoClient;
 pub use config::Config;
-pub use error::{Error, Result};
+pub use error::{CallToolResult, Error, McpError, Result, ToolContent};
 pub use service::OpenMeteoService;
 
 /// Version of the library

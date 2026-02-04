@@ -55,6 +55,30 @@ impl Default for WeatherRequest {
     }
 }
 
+impl WeatherRequest {
+    /// Validate weather request parameters
+    ///
+    /// Checks:
+    /// - forecast_days: 1-16 (API limit)
+    /// - latitude: -90 to 90
+    /// - longitude: -180 to 180
+    pub fn validate(&self) -> crate::Result<()> {
+        // Validate coordinates
+        crate::error::validate_coordinates(self.latitude, self.longitude)?;
+
+        // Validate forecast_days range (Open-Meteo supports 1-16)
+        if let Some(days) = self.forecast_days {
+            if days < 1 || days > 16 {
+                return Err(crate::Error::InvalidParameter(
+                    format!("forecast_days must be between 1 and 16, got {}", days),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+}
+
 /// Weather forecast response
 #[derive(Debug, Deserialize, Serialize, JsonSchema, Clone)]
 pub struct WeatherResponse {
@@ -192,9 +216,35 @@ mod tests {
             ..Default::default()
         };
 
-        let json = serde_json::to_value(&req).unwrap();
+        let json = serde_json::to_value(&req).expect("Valid JSON serialization");
         assert_eq!(json["latitude"], 48.1);
         assert_eq!(json["longitude"], 11.6);
         assert!(json["hourly"].is_null()); // skip_serializing_if
+    }
+
+    #[test]
+    fn test_weather_request_validation() {
+        let valid_req = WeatherRequest {
+            latitude: 48.1,
+            longitude: 11.6,
+            forecast_days: Some(7),
+            ..Default::default()
+        };
+        assert!(valid_req.validate().is_ok());
+
+        let invalid_forecast = WeatherRequest {
+            latitude: 48.1,
+            longitude: 11.6,
+            forecast_days: Some(20),  // Out of range
+            ..Default::default()
+        };
+        assert!(invalid_forecast.validate().is_err());
+
+        let invalid_coords = WeatherRequest {
+            latitude: 999.0,  // Out of range
+            longitude: 11.6,
+            ..Default::default()
+        };
+        assert!(invalid_coords.validate().is_err());
     }
 }

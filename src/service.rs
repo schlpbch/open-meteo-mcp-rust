@@ -64,7 +64,7 @@ mod tests {
     #[test]
     fn test_service_creation() {
         let config = Config::default();
-        let service = OpenMeteoService::new(config).unwrap();
+        let service = OpenMeteoService::new(config).expect("Valid service creation");
         assert_eq!(service.api_base(), "https://api.open-meteo.com");
     }
 
@@ -72,7 +72,7 @@ mod tests {
     fn test_service_timeout_config() {
         let mut config = Config::default();
         config.timeout_secs = 60;
-        let service = OpenMeteoService::new(config).unwrap();
+        let service = OpenMeteoService::new(config).expect("Valid service with timeout");
         assert_eq!(service.config().timeout_secs, 60);
     }
 }

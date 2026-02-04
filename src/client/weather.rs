@@ -103,12 +103,12 @@ mod tests {
             }
         }"#;
 
-        let response: WeatherResponse = serde_json::from_str(json).unwrap();
+        let response: WeatherResponse = serde_json::from_str(json).expect("Valid weather JSON");
         assert_eq!(response.latitude, 48.1);
         assert_eq!(response.timezone, "Europe/Berlin");
         assert!(response.current.is_some());
 
-        let current = response.current.unwrap();
+        let current = response.current.expect("Current weather exists");
         assert_eq!(current.temperature, 5.2);
         assert_eq!(current.weather_code, 2);
     }

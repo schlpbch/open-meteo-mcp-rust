@@ -89,19 +89,31 @@ impl OpenMeteoClient {
     }
 }
 
-/// Validate date format (YYYY-MM-DD)
+/// Validate date format and semantics (YYYY-MM-DD)
+///
+/// Checks format and validates month (1-12) and day (1-31) ranges
 fn is_valid_date_format(date_str: &str) -> bool {
     let parts: Vec<&str> = date_str.split('-').collect();
     if parts.len() != 3 {
         return false;
     }
 
-    parts[0].len() == 4
-        && parts[0].chars().all(|c| c.is_ascii_digit())
-        && parts[1].len() == 2
-        && parts[1].chars().all(|c| c.is_ascii_digit())
-        && parts[2].len() == 2
-        && parts[2].chars().all(|c| c.is_ascii_digit())
+    // Format check
+    if !(parts[0].len() == 4 && parts[0].chars().all(|c| c.is_ascii_digit())) {
+        return false;
+    }
+    if !(parts[1].len() == 2 && parts[1].chars().all(|c| c.is_ascii_digit())) {
+        return false;
+    }
+    if !(parts[2].len() == 2 && parts[2].chars().all(|c| c.is_ascii_digit())) {
+        return false;
+    }
+
+    // Semantic validation: month 1-12, day 1-31
+    let month: u32 = parts[1].parse().unwrap_or(0);
+    let day: u32 = parts[2].parse().unwrap_or(0);
+
+    month >= 1 && month <= 12 && day >= 1 && day <= 31
 }
 
 #[cfg(test)]
@@ -124,6 +136,22 @@ mod tests {
     }
 
     #[test]
+    fn test_date_semantic_validation() {
+        // Valid dates
+        assert!(is_valid_date_format("2026-01-01"));
+        assert!(is_valid_date_format("2026-12-31"));
+
+        // Invalid month
+        assert!(!is_valid_date_format("2026-00-01"));
+        assert!(!is_valid_date_format("2026-13-01"));
+
+        // Invalid day
+        assert!(!is_valid_date_format("2026-02-00"));
+        assert!(!is_valid_date_format("2026-02-32"));
+        assert!(!is_valid_date_format("2026-99-99"));
+    }
+
+    #[test]
     fn test_historical_response_deserialization() {
         let json = r#"{
             "latitude": 48.1,
@@ -141,11 +169,11 @@ mod tests {
             }
         }"#;
 
-        let response: WeatherResponse = serde_json::from_str(json).unwrap();
+        let response: WeatherResponse = serde_json::from_str(json).expect("Valid JSON");
         assert_eq!(response.latitude, 48.1);
         assert!(response.daily.is_some());
 
-        let daily = response.daily.unwrap();
+        let daily = response.daily.expect("Expected field exists");
         assert_eq!(daily.time.len(), 2);
     }
 }

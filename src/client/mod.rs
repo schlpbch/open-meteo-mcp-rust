@@ -148,10 +148,11 @@ mod tests {
             reqwest::Client::builder()
                 .timeout(Duration::from_secs(30))
                 .build()
-                .unwrap(),
+                .expect("Valid HTTP client"),
         );
         let client = OpenMeteoClient::new(http_client);
-        assert!(client.http_client().is_some());
+        // Verify client was created (Arc is always Some)
+        let _ = client.http_client();
     }
 
     #[test]

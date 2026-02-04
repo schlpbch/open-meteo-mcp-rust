@@ -96,7 +96,7 @@ mod tests {
             "generationtime_ms": 1.23
         }"#;
 
-        let response: GeocodeResponse = serde_json::from_str(json).unwrap();
+        let response: GeocodeResponse = serde_json::from_str(json).expect("Valid geocode JSON");
         assert_eq!(response.results.len(), 1);
 
         let loc = &response.results[0];
