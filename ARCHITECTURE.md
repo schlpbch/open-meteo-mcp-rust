@@ -24,80 +24,146 @@
 
 ## System Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                      Claude Desktop (AI Client)                  │
-│                                                                   │
-│              Uses Model Context Protocol (MCP) v1.0              │
-└────────────────────────────┬────────────────────────────────────┘
-                             │
-                             │ STDIO Transport (binary protocol)
-                             │
-┌────────────────────────────▼────────────────────────────────────┐
-│                    Open-Meteo MCP Server                         │
-│                                                                   │
-│  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────┐  │
-│  │   Tool Handlers  │  │    Resources     │  │   Prompts    │  │
-│  │                  │  │                  │  │              │  │
-│  │ • Weather        │  │ • Weather Codes  │  │ • Ski Trip   │  │
-│  │ • Locations      │  │ • Parameters     │  │ • Activities │  │
-│  │ • Air Quality    │  │ • AQI Reference  │  │ • Travel     │  │
-│  │ • Snow           │  │ • Swiss Loc.     │  │              │  │
-│  │ • Marine         │  │                  │  │              │  │
-│  │ • Alerts         │  │                  │  │              │  │
-│  │ • Astronomy      │  │                  │  │              │  │
-│  │ • Comfort        │  │                  │  │              │  │
-│  │ • Historical     │  │                  │  │              │  │
-│  │ • Comparison     │  │                  │  │              │  │
-│  │ • Ping           │  │                  │  │              │  │
-│  └────────┬─────────┘  └────────┬─────────┘  └────────┬─────┘  │
-│           │                     │                     │         │
-│           └─────────────────────┼─────────────────────┘         │
-│                                 │                               │
-│  ┌──────────────────────────────▼───────────────────────────┐  │
-│  │              OpenMeteoService (Orchestration)             │  │
-│  │                                                            │  │
-│  │  • Service initialization & config management            │  │
-│  │  • HTTP client pooling (Arc<reqwest::Client>)            │  │
-│  │  • Request validation & transformation                   │  │
-│  │  • Error handling & MCP protocol conversion              │  │
-│  └────────────────────────────┬──────────────────────────────┘  │
-│                                │                                 │
-│  ┌──────────────────────────────▼──────────────────────────┐   │
-│  │         OpenMeteoClient (HTTP API Abstraction)           │   │
-│  │                                                          │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌─────────┐ │   │
-│  │  │ Weather  │  │ Geocoding│  │ Air Qual.│  │ Archive │ │   │
-│  │  │ Client   │  │ Client   │  │ Client   │  │ Client  │ │   │
-│  │  └────┬─────┘  └────┬─────┘  └────┬─────┘  └────┬────┘ │   │
-│  │       │             │             │             │      │   │
-│  │  ┌────┴─────────────┴─────────────┴─────────────┴────┐ │   │
-│  │  │    HTTP Client with Pooling & Retry Logic        │ │   │
-│  │  │                                                  │ │   │
-│  │  │  • Connection pooling (Arc<reqwest::Client>)    │ │   │
-│  │  │  • Exponential backoff retry strategy           │ │   │
-│  │  │  • Configurable timeout (1-300 seconds)         │ │   │
-│  │  │  • gzip compression support                     │ │   │
-│  │  │  • Status code validation                       │ │   │
-│  │  └──────────────────────────────────────────────────┘ │   │
-│  └──────────────────────────────┬───────────────────────┘   │
-└────────────────────────────────┬──────────────────────────────┘
-                                 │
-                  ┌──────────────┴──────────────┐
-                  │                             │
-         ┌────────▼────────┐         ┌──────────▼────────┐
-         │  Open-Meteo API │         │  Health Check     │
-         │                │         │  (readiness TTL)   │
-         │ • Forecast API │         └────────────────────┘
-         │ • Geocoding    │
-         │ • Air Quality  │
-         │ • Archive      │
-         └────────────────┘
+```mermaid
+graph TB
+    Claude["Claude Desktop<br/>(AI Client)"]
+
+    subgraph Server["Open-Meteo MCP Server"]
+        subgraph Tools["Tool Handlers<br/>(11 tools)"]
+            T1["• Weather<br/>• Locations<br/>• Air Quality"]
+            T2["• Snow<br/>• Marine<br/>• Alerts"]
+            T3["• Astronomy<br/>• Comfort<br/>• Historical"]
+            T4["• Comparison<br/>• Ping"]
+        end
+
+        subgraph Resources["Resources<br/>(4 resources)"]
+            R1["• Weather Codes<br/>• Parameters<br/>• AQI Reference<br/>• Swiss Locations"]
+        end
+
+        subgraph Prompts["Prompts<br/>(3 prompts)"]
+            P1["• Ski Trip<br/>• Outdoor Activity<br/>• Travel Planning"]
+        end
+
+        Orchestration["OpenMeteoService<br/>(Orchestration Layer)<br/>• Config Management<br/>• HTTP Client Pooling<br/>• Validation & Transformation<br/>• Error Conversion"]
+
+        subgraph APILayer["HTTP API Abstraction"]
+            Weather["Weather<br/>Client"]
+            Geocoding["Geocoding<br/>Client"]
+            AirQuality["Air Quality<br/>Client"]
+            Archive["Archive<br/>Client"]
+            Marine["Marine<br/>Client"]
+        end
+
+        HTTPPool["HTTP Client Pool<br/>(Arc&lt;reqwest::Client&gt;)<br/>• Connection Pooling<br/>• Retry Logic<br/>• gzip Compression"]
+    end
+
+    Health["Health Check<br/>(Liveness/Readiness)"]
+    API["Open-Meteo API<br/>• Forecast API<br/>• Geocoding<br/>• Air Quality<br/>• Archive"]
+
+    Claude -->|STDIO<br/>MCP v1.0| Server
+    T1 --> Orchestration
+    T2 --> Orchestration
+    T3 --> Orchestration
+    T4 --> Orchestration
+    R1 --> Orchestration
+    P1 --> Orchestration
+
+    Orchestration --> APILayer
+
+    Weather --> HTTPPool
+    Geocoding --> HTTPPool
+    AirQuality --> HTTPPool
+    Archive --> HTTPPool
+    Marine --> HTTPPool
+
+    HTTPPool --> API
+    HTTPPool --> Health
+
+    style Server fill:#e1f5ff
+    style Orchestration fill:#fff3e0
+    style HTTPPool fill:#f3e5f5
+    style API fill:#e8f5e9
 ```
 
 ---
 
 ## Module Organization
+
+### Module Dependency Graph
+
+```mermaid
+graph TB
+    Main["src/main.rs<br/>(Entry Point)"]
+
+    Config["config.rs<br/>(Configuration)"]
+    Error["error.rs<br/>(Error Types)"]
+    Health["health.rs<br/>(Health Checks)"]
+
+    Service["service.rs<br/>(Orchestration)"]
+
+    subgraph Tools["Tools Module<br/>(11 tool handlers)"]
+        Weather["weather.rs"]
+        Location["location.rs"]
+        AirQual["air_quality.rs"]
+        Snow["snow.rs"]
+        Marine["marine.rs"]
+        Alerts["alerts.rs"]
+        Astronomy["astronomy.rs"]
+        Comfort["comfort.rs"]
+        Historical["historical.rs"]
+        Comparison["comparison.rs"]
+        Ping["ping.rs"]
+    end
+
+    subgraph Types["Types Module<br/>(Data Models)"]
+        TWeather["weather.rs"]
+        TLocation["location.rs"]
+        TAirQual["air_quality.rs"]
+        TOther["...rest of types"]
+    end
+
+    subgraph Client["Client Module<br/>(HTTP Abstraction)"]
+        CWeather["weather.rs"]
+        CGeocode["geocoding.rs"]
+        CAirQual["air_quality.rs"]
+        CArchive["archive.rs"]
+        CMarine["marine.rs"]
+        CCore["mod.rs<br/>(Connection Pool)"]
+    end
+
+    Resources["resources/<br/>(Static Data)"]
+    Prompts["prompts/<br/>(Prompt Templates)"]
+
+    Main --> Config
+    Main --> Service
+    Main --> Health
+
+    Service --> Tools
+    Service --> Resources
+    Service --> Prompts
+    Service --> Client
+    Service --> Error
+
+    Tools --> Types
+    Tools --> Client
+    Tools --> Error
+
+    Client --> Types
+    Client --> Error
+
+    Config --> Error
+
+    style Main fill:#bbdefb
+    style Service fill:#fff3e0
+    style Tools fill:#f3e5f5
+    style Types fill:#e8f5e9
+    style Client fill:#ffe0b2
+    style Config fill:#c8e6c9
+    style Error fill:#ffcdd2
+    style Health fill:#b2dfdb
+    style Resources fill:#f1f8e9
+    style Prompts fill:#f1f8e9
+```
 
 ### Core Modules
 
@@ -243,53 +309,88 @@
 
 ### Standard Tool Execution Flow
 
-```
-1. Tool Handler Method Called
-   └─> Input Parameters (float, string, etc.)
+```mermaid
+sequenceDiagram
+    actor Client as MCP Client
+    participant Handler as Tool Handler
+    participant Validator as Request Validator
+    participant APIClient as API Client
+    participant HTTP as HTTP Layer
+    participant OpenMeteo as Open-Meteo API
 
-2. Request Validation (Type Layer)
-   ├─> Coordinate validation (-90..90, -180..180)
-   ├─> Parameter range checks (forecast_days: 1-16)
-   └─> Empty string validation
-
-3. Request Building
-   └─> Create typed request struct (e.g., WeatherRequest)
-
-4. API Client Call
-   ├─> Client method invocation (e.g., get_weather())
-   ├─> Coordinate validation (second layer)
-   ├─> HTTP request construction with query params
-   ├─> HTTP response reception
-   └─> JSON deserialization to response type
-
-5. Response Transformation
-   ├─> Convert to serde_json::Value
-   └─> Wrap in ToolContent::Json
-
-6. Result Building
-   └─> CallToolResult::success(vec![ToolContent])
-
-7. Return to MCP Server
-   └─> MCP serializes to JSON-RPC response
+    Client->>Handler: Tool invocation with params
+    Handler->>Validator: Validate coordinates & ranges
+    alt Validation Success
+        Validator->>Handler: Valid
+        Handler->>APIClient: Call API method
+        APIClient->>HTTP: Build HTTP request
+        HTTP->>OpenMeteo: Send request
+        OpenMeteo-->>HTTP: JSON response
+        HTTP-->>APIClient: Deserialized response
+        APIClient->>APIClient: Convert to ToolContent
+        APIClient-->>Handler: CallToolResult::success
+        Handler-->>Client: MCP response JSON-RPC
+    else Validation Fails
+        Validator-->>Handler: Error
+        Handler->>Handler: Map to McpError
+        Handler-->>Client: MCP error JSON-RPC
+    end
 ```
 
 ### Error Handling Flow
 
-```
-API Client Error
-   └─> Error::HttpClient (from reqwest)
-       └─> McpError::InternalError
-           └─> MCP JSON-RPC error response
+```mermaid
+flowchart TD
+    Start["Request Received"]
 
-Validation Error
-   └─> Error::InvalidCoordinates
-       └─> McpError::InvalidParameter
-           └─> MCP JSON-RPC error response
+    Start --> Validate["Type Layer Validation"]
 
-Rate Limit
-   └─> Error::RateLimit { seconds: 60 }
-       └─> McpError::RateLimit
-           └─> MCP JSON-RPC error response
+    Validate -->|Invalid Coords| ER1["Error::InvalidCoordinates"]
+    Validate -->|Invalid Param| ER2["Error::InvalidParameter"]
+    Validate -->|Valid| APICall["API Client Call"]
+
+    APICall --> ClientVal["Request Layer Validation"]
+    ClientVal -->|Validation Error| ER3["Error::InvalidParameter"]
+    ClientVal -->|Valid| HTTPReq["HTTP Request"]
+
+    HTTPReq --> HTTPRes["HTTP Response"]
+    HTTPRes -->|Timeout| ER4["Error::Timeout"]
+    HTTPRes -->|Rate Limit| ER5["Error::RateLimit"]
+    HTTPRes -->|HTTP Error| ER6["Error::HttpClient"]
+    HTTPRes -->|Success| Deserialize["Deserialize JSON"]
+
+    Deserialize -->|Invalid JSON| ER7["Error::Serialization"]
+    Deserialize -->|Valid| Transform["Transform Response"]
+    Transform --> Success["CallToolResult::success"]
+
+    ER1 --> ConvertMCP1["McpError::InvalidParameter"]
+    ER2 --> ConvertMCP2["McpError::InvalidParameter"]
+    ER3 --> ConvertMCP3["McpError::InvalidParameter"]
+    ER4 --> ConvertMCP4["McpError::Timeout"]
+    ER5 --> ConvertMCP5["McpError::RateLimit"]
+    ER6 --> ConvertMCP6["McpError::InternalError"]
+    ER7 --> ConvertMCP7["McpError::InternalError"]
+
+    ConvertMCP1 --> JSONResponse["JSON-RPC Error Response"]
+    ConvertMCP2 --> JSONResponse
+    ConvertMCP3 --> JSONResponse
+    ConvertMCP4 --> JSONResponse
+    ConvertMCP5 --> JSONResponse
+    ConvertMCP6 --> JSONResponse
+    ConvertMCP7 --> JSONResponse
+
+    Success --> JSONSuccess["JSON-RPC Success Response"]
+
+    style Success fill:#c8e6c9
+    style JSONSuccess fill:#c8e6c9
+    style JSONResponse fill:#ffcdd2
+    style ER1 fill:#ffcdd2
+    style ER2 fill:#ffcdd2
+    style ER3 fill:#ffcdd2
+    style ER4 fill:#ffcdd2
+    style ER5 fill:#ffcdd2
+    style ER6 fill:#ffcdd2
+    style ER7 fill:#ffcdd2
 ```
 
 ---
@@ -337,28 +438,46 @@ pub fn validate(&self) -> Result<()> {
 
 ## Error Type Hierarchy
 
-```
-Application Error Enum
-├── HttpClient(reqwest::Error)          → McpError::InternalError
-├── Serialization(serde_json::Error)    → McpError::InternalError
-├── InvalidParameter(String)            → McpError::InvalidParameter
-├── InvalidCoordinates { lat, lon }     → McpError::InvalidParameter
-├── RateLimit { seconds: 64 }           → McpError::RateLimit
-├── Timeout(u64)                        → McpError::Timeout
-├── ApiError(String)                    → McpError::ToolError
-├── Config(String)                      → McpError::InternalError
-├── Mcp(String)                         → McpError::InternalError
-├── Io(std::io::Error)                  → McpError::InternalError
-└── Internal(String)                    → McpError::InternalError
+```mermaid
+graph LR
+    subgraph AppErrors["Application Error Enum"]
+        AE1["HttpClient<br/>(reqwest::Error)"]
+        AE2["Serialization<br/>(serde_json::Error)"]
+        AE3["InvalidParameter<br/>(String)"]
+        AE4["InvalidCoordinates<br/>{lat, lon}"]
+        AE5["RateLimit<br/>{seconds}"]
+        AE6["Timeout<br/>(u64)"]
+        AE7["ApiError<br/>(String)"]
+        AE8["Config<br/>(String)"]
+        AE9["Mcp<br/>(String)"]
+        AE10["Io<br/>(std::io::Error)"]
+        AE11["Internal<br/>(String)"]
+    end
 
-MCP Error Enum
-├── InvalidRequest(String)
-├── InvalidParameter(String)
-├── ResourceNotFound(String)
-├── InternalError(String)
-├── ToolError(String)
-├── RateLimit(String)
-└── Timeout(String)
+    subgraph MCPErrors["MCP Error Enum"]
+        ME1["InvalidRequest<br/>(String)"]
+        ME2["InvalidParameter<br/>(String)"]
+        ME3["ResourceNotFound<br/>(String)"]
+        ME4["InternalError<br/>(String)"]
+        ME5["ToolError<br/>(String)"]
+        ME6["RateLimit<br/>(String)"]
+        ME7["Timeout<br/>(String)"]
+    end
+
+    AE1 --> ME4
+    AE2 --> ME4
+    AE3 --> ME2
+    AE4 --> ME2
+    AE5 --> ME6
+    AE6 --> ME7
+    AE7 --> ME5
+    AE8 --> ME4
+    AE9 --> ME4
+    AE10 --> ME4
+    AE11 --> ME4
+
+    style AppErrors fill:#fff3e0
+    style MCPErrors fill:#e1f5ff
 ```
 
 ---
@@ -367,40 +486,89 @@ MCP Error Enum
 
 ### Configuration Loading Order
 
-```
-1. Environment Variables (envy crate)
-   ├── HOST (default: "0.0.0.0")
-   ├── PORT (default: 8888)
-   ├── API_BASE_URL (default: "https://api.open-meteo.com")
-   ├── TIMEOUT_SECS (default: 30)
-   ├── LOG_LEVEL (default: "info")
-   └── TRANSPORT (default: "stdio")
+```mermaid
+sequenceDiagram
+    participant Main as main()
+    participant EnvLoader as Environment Loader
+    participant Validator as Validator
+    participant Service as Service Init
 
-2. Validation
-   ├── Port: 1-65535
-   ├── Timeout: 1-300 seconds
-   ├── Transport: "stdio" or "sse"
-   ├── Host: not empty
-   └── API Base: not empty
+    Main->>EnvLoader: Load configuration
+    EnvLoader->>EnvLoader: HOST (default: 0.0.0.0)
+    EnvLoader->>EnvLoader: PORT (default: 8888)
+    EnvLoader->>EnvLoader: API_BASE_URL (default)
+    EnvLoader->>EnvLoader: TIMEOUT_SECS (default: 30)
+    EnvLoader->>EnvLoader: LOG_LEVEL (default: info)
+    EnvLoader->>EnvLoader: TRANSPORT (default: stdio)
+    EnvLoader-->>Main: Config struct
 
-3. Service Initialization
-   ├── HTTP client creation
-   ├── Client pooling setup
-   └── Health checker initialization
+    Main->>Validator: Validate configuration
+    Validator->>Validator: Port: 1-65535
+    Validator->>Validator: Timeout: 1-300 seconds
+    Validator->>Validator: Transport: stdio|sse
+    Validator->>Validator: Host: not empty
+    Validator->>Validator: API Base: not empty
+    alt Validation Success
+        Validator-->>Main: Result::Ok(())
+    else Validation Fails
+        Validator-->>Main: Result::Err(message)
+        Main-->>Main: Exit with error
+    end
+
+    Main->>Service: Create OpenMeteoService
+    Service->>Service: Initialize HTTP client
+    Service->>Service: Setup connection pooling
+    Service->>Service: Initialize health checker
+    Service-->>Main: Service ready
+
+    Main->>Main: Initialize tracing/logging
 ```
 
 ### Startup Sequence
 
-```
-main()
-  ├─> Load config from environment
-  ├─> Validate configuration
-  ├─> Initialize tracing/logging
-  ├─> Create OpenMeteoService
-  ├─> Select transport mode
-  │   ├─> STDIO: Run stdin/stdout loop for Claude Desktop
-  │   └─> SSE: Start HTTP server with axum
-  └─> Run event loop
+```mermaid
+flowchart TD
+    Start["main() entry point"]
+    LoadEnv["Load config from<br/>environment variables"]
+    Validate["Validate configuration<br/>Port, timeout, transport, etc."]
+    ValOK{Configuration<br/>valid?}
+
+    Logging["Initialize<br/>tracing/logging"]
+    CreateService["Create<br/>OpenMeteoService"]
+    SelectTransport["Select transport<br/>mode"]
+
+    StdioMode{Transport<br/>mode?}
+
+    StdioRun["STDIO Transport:<br/>Run stdin/stdout loop<br/>for Claude Desktop"]
+    SSERun["SSE Transport:<br/>Start HTTP server<br/>with axum<br/>Listen on configured port"]
+
+    EventLoop["Run event loop<br/>Process incoming requests"]
+    Shutdown["Graceful shutdown<br/>cleanup resources"]
+
+    Start --> LoadEnv
+    LoadEnv --> Validate
+    Validate --> ValOK
+
+    ValOK -->|No| FailExit["Exit with error<br/>message"]
+    ValOK -->|Yes| Logging
+
+    Logging --> CreateService
+    CreateService --> SelectTransport
+    SelectTransport --> StdioMode
+
+    StdioMode -->|stdio| StdioRun
+    StdioMode -->|sse| SSERun
+
+    StdioRun --> EventLoop
+    SSERun --> EventLoop
+
+    EventLoop --> Shutdown
+
+    style Start fill:#bbdefb
+    style CreateService fill:#fff3e0
+    style EventLoop fill:#c8e6c9
+    style Shutdown fill:#ffccbc
+    style FailExit fill:#ffcdd2
 ```
 
 ---
@@ -497,18 +665,30 @@ fn test_error_to_mcp_conversion() {
 
 ### Docker Multi-Stage Build
 
-```dockerfile
-# Stage 1: Build
-FROM rust:latest
-  ├─> Install dependencies
-  ├─> Build release binary
-  └─> Result: 1.2GB intermediate image
+```mermaid
+graph LR
+    subgraph Stage1["Stage 1: Build"]
+        B1["FROM rust:latest"]
+        B2["Install dependencies<br/>apt-get, build-essential"]
+        B3["Copy source code"]
+        B4["cargo build --release"]
+        B5["Result: 1.2GB<br/>intermediate image"]
+        B1 --> B2 --> B3 --> B4 --> B5
+    end
 
-# Stage 2: Runtime
-FROM gcr.io/distroless/cc-debian12:nonroot
-  ├─> Copy binary from Stage 1
-  ├─> Set working directory
-  └─> Result: 26.4MB final image
+    subgraph Stage2["Stage 2: Runtime"]
+        R1["FROM distroless/cc:nonroot"]
+        R2["Set working directory"]
+        R3["Copy binary from Stage 1"]
+        R4["Set entry point"]
+        R5["Result: 26.4MB<br/>final image"]
+        R1 --> R2 --> R3 --> R4 --> R5
+    end
+
+    B5 -.->|Extract| R3
+
+    style B5 fill:#ffccbc
+    style R5 fill:#c8e6c9
 ```
 
 ### Health Checks
