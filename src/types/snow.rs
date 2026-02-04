@@ -1,11 +1,11 @@
-//! Marine API types (waves, swells)
+//! Snow conditions API types
 
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
 
-/// Request for marine data
+/// Request for snow conditions data
 #[derive(Debug, Clone, Serialize)]
-pub struct MarineRequest {
+pub struct SnowRequest {
     pub latitude: f64,
     pub longitude: f64,
 
@@ -20,9 +20,12 @@ pub struct MarineRequest {
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub forecast_days: Option<u8>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub temperature_unit: Option<String>,
 }
 
-impl Default for MarineRequest {
+impl Default for SnowRequest {
     fn default() -> Self {
         Self {
             latitude: 0.0,
@@ -31,12 +34,13 @@ impl Default for MarineRequest {
             daily: None,
             timezone: None,
             forecast_days: Some(7),
+            temperature_unit: None,
         }
     }
 }
 
-impl MarineRequest {
-    /// Validate marine request parameters
+impl SnowRequest {
+    /// Validate snow request parameters
     ///
     /// Checks:
     /// - latitude: -90 to 90
@@ -57,63 +61,50 @@ impl MarineRequest {
     }
 }
 
-/// Marine conditions response
+/// Snow conditions response
 #[derive(Debug, Deserialize, Serialize, JsonSchema, Clone)]
-pub struct MarineResponse {
+pub struct SnowResponse {
     pub latitude: f64,
     pub longitude: f64,
+    pub elevation: f64,
     pub timezone: String,
+    pub timezone_abbreviation: Option<String>,
 
     #[serde(default)]
-    pub hourly: Option<WaveData>,
+    pub hourly: Option<SnowData>,
 
     #[serde(default)]
     pub hourly_units: Option<std::collections::HashMap<String, String>>,
 
     #[serde(default)]
-    pub daily: Option<WaveData>,
+    pub daily: Option<SnowData>,
 
     #[serde(default)]
     pub daily_units: Option<std::collections::HashMap<String, String>>,
 }
 
-/// Wave and swell data
+/// Snow measurement data
 #[derive(Debug, Deserialize, Serialize, JsonSchema, Clone)]
-pub struct WaveData {
+pub struct SnowData {
     pub time: Vec<String>,
 
     #[serde(default)]
-    pub wave_height: Option<Vec<f64>>,
+    pub snowfall: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub wave_direction: Option<Vec<u16>>,
+    pub snow_depth: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub wave_period: Option<Vec<f64>>,
+    pub temperature_2m: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub swell_wave_height: Option<Vec<f64>>,
-
-    #[serde(default)]
-    pub swell_wave_direction: Option<Vec<u16>>,
-
-    #[serde(default)]
-    pub swell_wave_period: Option<Vec<f64>>,
-
-    #[serde(default)]
-    pub wind_wave_height: Option<Vec<f64>>,
-
-    #[serde(default)]
-    pub wind_wave_direction: Option<Vec<u16>>,
-
-    #[serde(default)]
-    pub wind_wave_period: Option<Vec<f64>>,
+    pub precipitation: Option<Vec<f64>>,
 
     #[serde(default)]
     pub wind_speed_10m: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub wind_direction_10m: Option<Vec<u16>>,
+    pub cloud_cover: Option<Vec<u8>>,
 
     #[serde(default)]
     pub weather_code: Option<Vec<u16>>,
@@ -124,8 +115,27 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_marine_request_default() {
-        let req = MarineRequest::default();
+    fn test_snow_request_default() {
+        let req = SnowRequest::default();
         assert_eq!(req.forecast_days, Some(7));
+    }
+
+    #[test]
+    fn test_snow_request_validation() {
+        let valid_req = SnowRequest {
+            latitude: 45.5,
+            longitude: 11.0,
+            forecast_days: Some(7),
+            ..Default::default()
+        };
+        assert!(valid_req.validate().is_ok());
+
+        let invalid_req = SnowRequest {
+            latitude: 45.5,
+            longitude: 11.0,
+            forecast_days: Some(20),
+            ..Default::default()
+        };
+        assert!(invalid_req.validate().is_err());
     }
 }

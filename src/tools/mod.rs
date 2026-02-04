@@ -6,6 +6,18 @@
 //! - Return `CallToolResult` for MCP protocol compliance
 //! - Implement proper error handling with `McpError` conversion
 
+pub mod weather;
+pub mod location;
+pub mod location_swiss;
+pub mod air_quality;
+pub mod marine;
+pub mod snow;
+pub mod alerts;
+pub mod astronomy;
+pub mod comfort;
+pub mod comparison;
+pub mod historical;
+
 use crate::service::OpenMeteoService;
 use crate::{CallToolResult, McpError, ToolContent};
 use serde::{Deserialize, Serialize};

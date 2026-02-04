@@ -1,19 +1,13 @@
-//! Marine API types (waves, swells)
+//! Astronomy API types (sunrise, sunset, moon phases)
 
 use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
 
-/// Request for marine data
+/// Request for astronomy data
 #[derive(Debug, Clone, Serialize)]
-pub struct MarineRequest {
+pub struct AstronomyRequest {
     pub latitude: f64,
     pub longitude: f64,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub hourly: Option<String>,
-
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub daily: Option<String>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timezone: Option<String>,
@@ -22,26 +16,24 @@ pub struct MarineRequest {
     pub forecast_days: Option<u8>,
 }
 
-impl Default for MarineRequest {
+impl Default for AstronomyRequest {
     fn default() -> Self {
         Self {
             latitude: 0.0,
             longitude: 0.0,
-            hourly: None,
-            daily: None,
             timezone: None,
             forecast_days: Some(7),
         }
     }
 }
 
-impl MarineRequest {
-    /// Validate marine request parameters
+impl AstronomyRequest {
+    /// Validate astronomy request parameters
     ///
     /// Checks:
     /// - latitude: -90 to 90
     /// - longitude: -180 to 180
-    /// - forecast_days: 1-16 (API limit)
+    /// - forecast_days: 1-16
     pub fn validate(&self) -> crate::Result<()> {
         crate::error::validate_coordinates(self.latitude, self.longitude)?;
 
@@ -57,66 +49,48 @@ impl MarineRequest {
     }
 }
 
-/// Marine conditions response
+/// Astronomy data response
 #[derive(Debug, Deserialize, Serialize, JsonSchema, Clone)]
-pub struct MarineResponse {
+pub struct AstronomyResponse {
     pub latitude: f64,
     pub longitude: f64,
     pub timezone: String,
 
     #[serde(default)]
-    pub hourly: Option<WaveData>,
-
-    #[serde(default)]
-    pub hourly_units: Option<std::collections::HashMap<String, String>>,
-
-    #[serde(default)]
-    pub daily: Option<WaveData>,
+    pub daily: Option<AstronomyData>,
 
     #[serde(default)]
     pub daily_units: Option<std::collections::HashMap<String, String>>,
 }
 
-/// Wave and swell data
+/// Daily astronomy data
 #[derive(Debug, Deserialize, Serialize, JsonSchema, Clone)]
-pub struct WaveData {
+pub struct AstronomyData {
     pub time: Vec<String>,
 
     #[serde(default)]
-    pub wave_height: Option<Vec<f64>>,
+    pub sunrise: Option<Vec<String>>,
 
     #[serde(default)]
-    pub wave_direction: Option<Vec<u16>>,
+    pub sunset: Option<Vec<String>>,
 
     #[serde(default)]
-    pub wave_period: Option<Vec<f64>>,
+    pub sunrise_end: Option<Vec<String>>,
 
     #[serde(default)]
-    pub swell_wave_height: Option<Vec<f64>>,
+    pub sunset_start: Option<Vec<String>>,
 
     #[serde(default)]
-    pub swell_wave_direction: Option<Vec<u16>>,
+    pub moon_phase: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub swell_wave_period: Option<Vec<f64>>,
+    pub moon_altitude: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub wind_wave_height: Option<Vec<f64>>,
+    pub moon_distance: Option<Vec<f64>>,
 
     #[serde(default)]
-    pub wind_wave_direction: Option<Vec<u16>>,
-
-    #[serde(default)]
-    pub wind_wave_period: Option<Vec<f64>>,
-
-    #[serde(default)]
-    pub wind_speed_10m: Option<Vec<f64>>,
-
-    #[serde(default)]
-    pub wind_direction_10m: Option<Vec<u16>>,
-
-    #[serde(default)]
-    pub weather_code: Option<Vec<u16>>,
+    pub moon_illumination: Option<Vec<f64>>,
 }
 
 #[cfg(test)]
@@ -124,8 +98,19 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_marine_request_default() {
-        let req = MarineRequest::default();
+    fn test_astronomy_request_default() {
+        let req = AstronomyRequest::default();
         assert_eq!(req.forecast_days, Some(7));
+    }
+
+    #[test]
+    fn test_astronomy_request_validation() {
+        let valid_req = AstronomyRequest {
+            latitude: 48.1,
+            longitude: 11.6,
+            forecast_days: Some(7),
+            ..Default::default()
+        };
+        assert!(valid_req.validate().is_ok());
     }
 }

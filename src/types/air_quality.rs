@@ -31,6 +31,18 @@ impl Default for AirQualityRequest {
     }
 }
 
+impl AirQualityRequest {
+    /// Validate air quality request parameters
+    ///
+    /// Checks:
+    /// - latitude: -90 to 90
+    /// - longitude: -180 to 180
+    pub fn validate(&self) -> crate::Result<()> {
+        crate::error::validate_coordinates(self.latitude, self.longitude)?;
+        Ok(())
+    }
+}
+
 /// Air quality response
 #[derive(Debug, Deserialize, Serialize, JsonSchema, Clone)]
 pub struct AirQualityResponse {
