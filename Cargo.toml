@@ -54,7 +54,7 @@ futures = "0.3"
 mockall = "0.13"
 wiremock = "0.6"
 tokio-test = "0.4"
-assert_json_diff = "2.0"
+assert-json-diff = "2.0"
 
 [profile.release]
 opt-level = "z"      # Optimize for size
