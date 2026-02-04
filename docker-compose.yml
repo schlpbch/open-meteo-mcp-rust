@@ -1,0 +1,84 @@
+version: '3.8'
+
+services:
+  open-meteo-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: open-meteo-mcp
+    restart: unless-stopped
+
+    # Port mapping for local access
+    ports:
+      - "8888:8888"
+
+    # Environment configuration
+    environment:
+      TRANSPORT: sse
+      HOST: 0.0.0.0
+      PORT: 8888
+      LOG_LEVEL: debug
+      TIMEOUT_SECS: 30
+
+    # Resource limits
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+        reservations:
+          cpus: '0.25'
+          memory: 128M
+
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+    # Logging
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+    # Security context
+    security_opt:
+      - no-new-privileges:true
+    read_only_root_filesystem: false  # Set to true if no temp files needed
+
+  # Optional: curl-based health check validation
+  # (Not required for production, useful for development testing)
+  curl:
+    image: curlimages/curl:latest
+    depends_on:
+      - open-meteo-mcp
+    command:
+      - sh
+      - -c
+      - |
+        sleep 5 && \
+        echo "Testing /health endpoint..." && \
+        curl -v http://open-meteo-mcp:8888/health && \
+        echo "" && \
+        echo "Testing /ready endpoint..." && \
+        curl -v http://open-meteo-mcp:8888/ready && \
+        echo "" && \
+        echo "Testing /sse/info endpoint..." && \
+        curl -v http://open-meteo-mcp:8888/sse/info
+    profiles:
+      - test
+
+# Network configuration
+networks:
+  default:
+    name: open-meteo-network
+    driver: bridge
+
+# Volume configuration (if needed for persistent logs)
+volumes:
+  mcp-logs:
+    driver: local

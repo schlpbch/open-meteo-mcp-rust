@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Rust build artifacts
+target/
+*.rs.bk
+Cargo.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+.editorconfig
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs and temp files
+*.log
+logs/
+tmp/
+temp/
+
+# Documentation and examples (not needed in image)
+docs/
+examples/
+README.md
+CONTRIBUTING.md
+LICENSE*
+spec/
+PHASE_STATUS.md
+
+# Testing
+tests/
+.github/
+.gitlab-ci.yml
+.travis.yml
+
+# CI/CD
+.circleci/
+azure-pipelines.yml

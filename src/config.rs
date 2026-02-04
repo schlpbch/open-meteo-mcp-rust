@@ -68,6 +68,52 @@ impl Config {
     pub fn from_env_or_default() -> Self {
         Self::from_env().unwrap_or_default()
     }
+
+    /// Validate configuration settings
+    pub fn validate(&self) -> Result<(), String> {
+        // Validate port
+        if self.port == 0 {
+            return Err("Port must be between 1 and 65535".to_string());
+        }
+
+        // Validate transport
+        if !["stdio", "sse"].contains(&self.transport.as_str()) {
+            return Err(format!(
+                "Invalid transport '{}' (must be 'stdio' or 'sse')",
+                self.transport
+            ));
+        }
+
+        // Validate timeout
+        if self.timeout_secs == 0 || self.timeout_secs > 300 {
+            return Err(format!(
+                "Invalid timeout {} seconds (must be 1-300)",
+                self.timeout_secs
+            ));
+        }
+
+        // Validate host is not empty
+        if self.host.is_empty() {
+            return Err("Host cannot be empty".to_string());
+        }
+
+        // Validate API base URL is not empty
+        if self.api_base.is_empty() {
+            return Err("API base URL cannot be empty".to_string());
+        }
+
+        Ok(())
+    }
+
+    /// Check if STDIO transport is configured
+    pub fn is_stdio(&self) -> bool {
+        self.transport == "stdio"
+    }
+
+    /// Check if SSE transport is configured
+    pub fn is_sse(&self) -> bool {
+        self.transport == "sse"
+    }
 }
 
 impl Default for Config {

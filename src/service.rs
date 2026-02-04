@@ -55,6 +55,19 @@ impl OpenMeteoService {
     pub fn api_base(&self) -> &str {
         &self.config.api_base
     }
+
+    /// Check if the service is ready (API is reachable)
+    ///
+    /// This performs a quick ping to verify Open-Meteo API connectivity
+    /// and is used for readiness probes in Kubernetes/Docker.
+    pub async fn is_ready(&self) -> bool {
+        self.ping().await.is_ok()
+    }
+
+    /// Get service version
+    pub fn version(&self) -> &'static str {
+        crate::VERSION
+    }
 }
 
 #[cfg(test)]

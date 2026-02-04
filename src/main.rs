@@ -7,6 +7,7 @@ mod server;
 
 use clap::Parser;
 use open_meteo_mcp::{Config, OpenMeteoService};
+use std::sync::Arc;
 use tracing_subscriber::EnvFilter;
 
 #[derive(Parser, Debug)]
@@ -71,6 +72,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
+    // Wrap service in Arc for transport handlers
+    let service = Arc::new(service);
+
     // Select transport mode
     match args.transport.as_str() {
         "stdio" => run_stdio(service).await?,
@@ -84,11 +88,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn run_stdio(service: OpenMeteoService) -> Result<(), Box<dyn std::error::Error>> {
+async fn run_stdio(service: Arc<OpenMeteoService>) -> Result<(), Box<dyn std::error::Error>> {
     tracing::info!("Using STDIO transport for Claude Desktop");
 
-    // Phase 3: Run the MCP server with STDIO transport
-    server::run_mcp_server(service).await?;
+    // Run with STDIO transport
+    open_meteo_mcp::transport::stdio::run_stdio_server(service).await?;
 
     tracing::info!("MCP server shutdown complete");
 
@@ -96,17 +100,16 @@ async fn run_stdio(service: OpenMeteoService) -> Result<(), Box<dyn std::error::
 }
 
 async fn run_sse(
-    _service: OpenMeteoService,
+    service: Arc<OpenMeteoService>,
     port: u16,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    tracing::info!(port = port, "Using SSE transport");
+    let host = "127.0.0.1".to_string();
+    tracing::info!(host = %host, port = port, "Using SSE transport");
 
-    // TODO: Phase 4 - Implement axum server with SSE transport
-    tracing::info!("Phase 0: SSE transport initialized (will be implemented in Phase 4)");
+    // Run with SSE transport
+    open_meteo_mcp::transport::sse::run_server(service, host, port).await?;
 
-    // For now, keep the process alive
-    tokio::signal::ctrl_c().await?;
-    tracing::info!("Shutdown signal received");
+    tracing::info!("SSE transport shutdown complete");
 
     Ok(())
 }
