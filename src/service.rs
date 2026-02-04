@@ -1,5 +1,6 @@
 //! Core MCP service implementation
 
+use crate::client::OpenMeteoClient;
 use crate::config::Config;
 use crate::{Error, Result};
 use std::sync::Arc;
@@ -8,31 +9,41 @@ use std::sync::Arc;
 ///
 /// This service is the entry point for all MCP tool and resource operations.
 /// It manages the HTTP client connection pool and coordinates requests to
-/// the Open-Meteo API.
+/// the Open-Meteo API via the OpenMeteoClient.
 pub struct OpenMeteoService {
-    client: Arc<reqwest::Client>,
+    http_client: Arc<reqwest::Client>,
+    api_client: OpenMeteoClient,
     config: Config,
 }
 
 impl OpenMeteoService {
     /// Create a new OpenMeteoService with the given configuration
     pub fn new(config: Config) -> Result<Self> {
-        let client = reqwest::Client::builder()
+        let http_client = reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(config.timeout_secs))
             .connect_timeout(std::time::Duration::from_secs(10))
             .gzip(true)
             .user_agent(concat!("open-meteo-mcp/", env!("CARGO_PKG_VERSION")))
             .build()?;
 
+        let http_client = Arc::new(http_client);
+        let api_client = OpenMeteoClient::new(http_client.clone());
+
         Ok(Self {
-            client: Arc::new(client),
+            http_client,
+            api_client,
             config,
         })
     }
 
     /// Get a reference to the HTTP client
-    pub fn client(&self) -> Arc<reqwest::Client> {
-        self.client.clone()
+    pub fn http_client(&self) -> Arc<reqwest::Client> {
+        self.http_client.clone()
+    }
+
+    /// Get a reference to the API client
+    pub fn api_client(&self) -> OpenMeteoClient {
+        self.api_client.clone()
     }
 
     /// Get a reference to the configuration

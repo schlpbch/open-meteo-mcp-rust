@@ -1,0 +1,34 @@
+{
+  "results": [
+    {
+      "id": 2867714,
+      "name": "Munich",
+      "latitude": 48.13743,
+      "longitude": 11.5754,
+      "elevation": 518.0,
+      "feature_code": "CITY",
+      "country_code": "DE",
+      "country": "Germany",
+      "admin1": "Bavaria",
+      "timezone": "Europe/Berlin",
+      "population": 1484226,
+      "distance_m": 0.0
+    },
+    {
+      "id": 2895394,
+      "name": "Munich",
+      "latitude": 37.241905,
+      "longitude": -93.503808,
+      "elevation": 365.0,
+      "feature_code": "CITY",
+      "country_code": "US",
+      "country": "United States",
+      "admin1": "Missouri",
+      "admin2": "Phelps County",
+      "timezone": "America/Chicago",
+      "population": 2233,
+      "distance_m": 9000000.0
+    }
+  ],
+  "generationtime_ms": 1.23
+}
