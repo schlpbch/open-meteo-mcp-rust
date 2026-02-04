@@ -5,69 +5,39 @@
   "timezone": "Europe/Berlin",
   "timezone_abbreviation": "CET",
   "current": {
-    "time": "2026-02-04T12:00:00",
-    "interval": 900,
     "temperature": 5.2,
-    "relative_humidity": 65,
+    "relative_humidity": 72,
     "weather_code": 2,
-    "wind_speed_10m": 8.5,
-    "wind_direction_10m": 220,
-    "is_day": 1,
-    "apparent_temperature": 2.8,
-    "precipitation": 0.0,
-    "rain": 0.0,
-    "cloud_cover": 45
+    "wind_speed": 12.5,
+    "wind_direction": 270
   },
   "current_units": {
-    "time": "iso8601",
-    "interval": "seconds",
     "temperature": "°C",
     "relative_humidity": "%",
     "weather_code": "wmo code",
-    "wind_speed_10m": "km/h",
-    "wind_direction_10m": "°"
+    "wind_speed": "km/h",
+    "wind_direction": "°"
   },
   "hourly": {
-    "time": [
-      "2026-02-04T00:00",
-      "2026-02-04T01:00",
-      "2026-02-04T02:00"
-    ],
-    "temperature_2m": [4.5, 4.2, 4.0],
-    "precipitation": [0.0, 0.1, 0.0],
-    "weather_code": [2, 3, 2],
-    "wind_speed_10m": [7.8, 8.2, 8.5],
-    "wind_direction_10m": [215, 218, 220],
-    "relative_humidity_2m": [66, 67, 68],
-    "cloud_cover": [40, 42, 45]
+    "time": ["2026-02-04T00:00", "2026-02-04T01:00"],
+    "temperature_2m": [5.2, 4.8],
+    "precipitation": [0.0, 0.1]
   },
   "hourly_units": {
-    "time": "iso8601",
     "temperature_2m": "°C",
-    "precipitation": "mm",
-    "weather_code": "wmo code",
-    "wind_speed_10m": "km/h",
-    "wind_direction_10m": "°"
+    "precipitation": "mm"
   },
   "daily": {
-    "time": [
-      "2026-02-04",
-      "2026-02-05",
-      "2026-02-06"
-    ],
-    "weather_code": [2, 3, 2],
-    "temperature_2m_max": [8.5, 9.2, 8.8],
-    "temperature_2m_min": [2.1, 2.8, 2.4],
-    "precipitation_sum": [0.5, 1.2, 0.3],
-    "wind_speed_10m_max": [12.3, 13.5, 11.8],
-    "wind_direction_10m_dominant": [200, 210, 205]
+    "time": ["2026-02-04"],
+    "weather_code": [2],
+    "temperature_2m_max": [8.5],
+    "temperature_2m_min": [2.1],
+    "precipitation_sum": [0.5]
   },
   "daily_units": {
-    "time": "iso8601",
     "weather_code": "wmo code",
     "temperature_2m_max": "°C",
     "temperature_2m_min": "°C",
-    "precipitation_sum": "mm",
-    "wind_speed_10m_max": "km/h"
+    "precipitation_sum": "mm"
   }
 }

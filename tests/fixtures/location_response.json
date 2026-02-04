@@ -1,0 +1,18 @@
+{
+  "results": [
+    {
+      "id": 2867714,
+      "name": "Munich",
+      "latitude": 48.1351,
+      "longitude": 11.5820,
+      "elevation": 518,
+      "feature_code": "PPLA",
+      "country_code": "DE",
+      "country": "Germany",
+      "admin1": "Bavaria",
+      "admin2": "Munich",
+      "timezone": "Europe/Berlin"
+    }
+  ],
+  "generationtime_ms": 12.5
+}
