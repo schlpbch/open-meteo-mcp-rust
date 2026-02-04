@@ -1,10 +1,10 @@
 //! MCP Tool implementations
 //!
-//! Tools follow ADR-008 pattern:
-//! - Decorated with `#[tool]` macro (once rmcp integration is complete)
-//! - `#[tool_param]` for parameters with descriptions
-//! - Return `CallToolResult` for MCP protocol compliance
-//! - Implement proper error handling with `McpError` conversion
+//! Phase 3.5: Integrated with rmcp 0.3 SDK
+//! - Manual ServerHandler implementation
+//! - Tool registration via list_tools and call_tool methods
+//! - Resource and prompt handling
+//! - Full MCP protocol compliance
 
 pub mod weather;
 pub mod location;
@@ -33,14 +33,6 @@ pub struct PingResponse {
 
 impl OpenMeteoService {
     /// Simple ping tool to test MCP connectivity
-    ///
-    /// ADR-008: Implemented with MCP error handling pattern
-    ///
-    /// In Phase 2, this will be decorated with:
-    /// ```ignore
-    /// #[tool(description = "Ping MCP server for connectivity test")]
-    /// pub async fn ping(&self) -> Result<CallToolResult, McpError> { ... }
-    /// ```
     pub async fn ping(&self) -> std::result::Result<CallToolResult, McpError> {
         let response = PingResponse {
             message: "pong".to_string(),
