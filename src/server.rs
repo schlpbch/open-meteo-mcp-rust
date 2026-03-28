@@ -17,6 +17,7 @@ use tracing::debug;
 ///
 /// # Returns
 /// Result with error if initialization or runtime fails
+#[allow(dead_code)]
 pub async fn run_mcp_server(
     _service: OpenMeteoService,
 ) -> Result<(), Box<dyn std::error::Error>> {

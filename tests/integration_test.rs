@@ -1,6 +1,6 @@
 //! Integration tests with wiremock fixtures
 
-use open_meteo_mcp::{OpenMeteoClient, Config};
+use open_meteo_mcp::{OpenMeteoClient, client::BaseUrls};
 use std::sync::Arc;
 use wiremock::{Mock, MockServer, ResponseTemplate, matchers};
 
@@ -26,7 +26,11 @@ async fn test_get_weather_success() {
             .expect("Valid HTTP client"),
     );
 
-    let client = OpenMeteoClient::new(http_client);
+    let base_urls = BaseUrls {
+        weather: format!("{}/v1", mock_server.uri()),
+        ..Default::default()
+    };
+    let client = OpenMeteoClient::with_base_urls(http_client, base_urls);
 
     // Test weather request
     let req = open_meteo_mcp::types::weather::WeatherRequest {
@@ -146,7 +150,7 @@ async fn test_http_client_400_error() {
         .mount(&mock_server)
         .await;
 
-    // Create client
+    // Create client pointing to mock server
     let http_client = Arc::new(
         reqwest::Client::builder()
             .timeout(std::time::Duration::from_secs(30))
@@ -154,7 +158,11 @@ async fn test_http_client_400_error() {
             .expect("Valid HTTP client"),
     );
 
-    let client = OpenMeteoClient::new(http_client);
+    let base_urls = BaseUrls {
+        weather: format!("{}/v1", mock_server.uri()),
+        ..Default::default()
+    };
+    let client = OpenMeteoClient::with_base_urls(http_client, base_urls);
 
     let req = open_meteo_mcp::types::weather::WeatherRequest {
         latitude: 48.1,

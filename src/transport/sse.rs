@@ -21,7 +21,6 @@ use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tracing::{debug, error, info};
-use tower::ServiceBuilder;
 use tower_http::cors::CorsLayer;
 
 /// Application state shared across handlers
@@ -86,11 +85,7 @@ fn create_router(state: AppState) -> Router {
         .route("/sse/info", get(sse_info))
         .route("/sse", get(sse_endpoint))
         .with_state(state)
-        .layer(
-            ServiceBuilder::new()
-                .layer(CorsLayer::permissive())
-                .into_inner(),
-        )
+        .layer(CorsLayer::permissive())
 }
 
 /// SSE endpoint for MCP protocol messages

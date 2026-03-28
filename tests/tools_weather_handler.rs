@@ -1,10 +1,6 @@
 //! Tool handler tests for Weather/Forecast - Phase 4
 //! Comprehensive weather tool testing with all parameters
 
-mod utils {
-    pub use crate::*;
-}
-
 use open_meteo_mcp::OpenMeteoService;
 
 // ... (copy all 12 tests from tools/weather_handler_test.rs)

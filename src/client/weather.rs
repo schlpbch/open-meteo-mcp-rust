@@ -69,8 +69,6 @@ impl Clone for OpenMeteoClient {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::types::weather::CurrentWeather;
-
     #[test]
     fn test_weather_request_validation() {
         let req_invalid = WeatherRequest {

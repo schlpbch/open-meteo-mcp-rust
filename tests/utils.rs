@@ -1,7 +1,6 @@
 //! Shared test utilities and helpers
 
 use std::fs;
-use std::path::Path;
 
 /// Load a fixture file from tests/fixtures directory
 pub fn load_fixture(filename: &str) -> String {

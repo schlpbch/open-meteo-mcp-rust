@@ -1,6 +1,6 @@
 [package]
 name = "open-meteo-mcp"
-version = "0.1.0"
+version = "1.1.0"
 edition = "2021"
 rust-version = "1.75"
 description = "Weather and climate data via Open-Meteo API as an MCP server"
@@ -11,7 +11,7 @@ authors = ["Andreas Schlapbach <schlpbch@gmail.com>"]
 
 [dependencies]
 # MCP Protocol — official Rust SDK
-rmcp = { version = "0.3", features = ["server", "transport-io"] }
+rmcp = { version = "1.3", features = ["server", "transport-io"] }
 
 # Async runtime
 tokio = { version = "1.40", features = ["full"] }
@@ -25,9 +25,9 @@ serde_json = "1.0"
 schemars = { version = "1.0", features = ["preserve_order"] }
 
 # Web server (SSE) — Phase 4
-axum = "0.7"
-tower = "0.4"
-tower-http = { version = "0.5", features = ["cors", "compression-gzip"] }
+axum = "0.8"
+tower = "0.5"
+tower-http = { version = "0.6", features = ["cors", "compression-gzip"] }
 
 # Error handling
 thiserror = "1.0"
@@ -54,7 +54,7 @@ clap = { version = "4.5", features = ["derive", "env"] }
 futures = "0.3"
 
 [dev-dependencies]
-mockall = "0.13"
+mockall = "0.14"
 wiremock = "0.6"
 tokio-test = "0.4"
 assert-json-diff = "2.0"

@@ -93,7 +93,7 @@ mod tests {
         assert!(result.is_err());
         match result {
             Err(McpError::InvalidParameter(msg)) => {
-                assert!(msg.contains("at least 2"));
+                assert!(msg.to_lowercase().contains("at least 2"));
             }
             _ => panic!("Expected InvalidParameter error"),
         }
