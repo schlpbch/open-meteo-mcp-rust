@@ -110,10 +110,7 @@ impl HealthChecker {
     async fn perform_readiness_check(&self, service: &OpenMeteoService) -> bool {
         // Quick ping to verify Open-Meteo API is reachable
         // This is intentionally simple - just check we can reach the API
-        match service.ping().await {
-            Ok(_) => true,
-            Err(_) => false,
-        }
+        (service.ping().await).is_ok()
     }
 
     /// Get service uptime in seconds
@@ -136,16 +133,15 @@ impl HealthChecker {
     }
 
     /// Create readiness response
-    pub async fn readiness_response(
-        &self,
-        service: &OpenMeteoService,
-    ) -> HealthCheckResponse {
+    pub async fn readiness_response(&self, service: &OpenMeteoService) -> HealthCheckResponse {
         let status = self.check_readiness(service).await;
         HealthCheckResponse {
             status: status.to_string(),
             message: match status {
                 HealthStatus::Healthy => "Service is ready to handle requests".to_string(),
-                HealthStatus::Degraded => "Service is running but not ready (API unreachable)".to_string(),
+                HealthStatus::Degraded => {
+                    "Service is running but not ready (API unreachable)".to_string()
+                }
                 HealthStatus::Unhealthy => "Service is unhealthy".to_string(),
             },
             timestamp: current_unix_timestamp(),

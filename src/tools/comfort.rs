@@ -36,8 +36,7 @@ impl OpenMeteoService {
         req.validate().map_err(|e| match e {
             crate::Error::InvalidCoordinates { lat, lon } => {
                 McpError::InvalidParameter(format!(
-                    "Invalid coordinates: latitude must be -90..90, got {}, longitude must be -180..180, got {}",
-                    lat, lon
+                    "Invalid coordinates: latitude must be -90..90, got {lat}, longitude must be -180..180, got {lon}"
                 ))
             }
             crate::Error::InvalidParameter(msg) => McpError::InvalidParameter(msg),
@@ -62,14 +61,14 @@ impl OpenMeteoService {
             .await
             .map_err(|e| match e {
                 crate::Error::HttpClient(http_err) => {
-                    McpError::InternalError(format!("HTTP request failed: {}", http_err))
+                    McpError::InternalError(format!("HTTP request failed: {http_err}"))
                 }
                 crate::Error::ApiError(msg) => McpError::ToolError(msg),
                 crate::Error::Timeout(_) => {
                     McpError::Timeout("Comfort index calculation timed out".to_string())
                 }
                 crate::Error::RateLimit { seconds } => {
-                    McpError::RateLimit(format!("Rate limited, retry after {} seconds", seconds))
+                    McpError::RateLimit(format!("Rate limited, retry after {seconds} seconds"))
                 }
                 _ => McpError::InternalError(e.to_string()),
             })?;
@@ -96,7 +95,9 @@ impl OpenMeteoService {
             }
         });
 
-        Ok(CallToolResult::success(vec![ToolContent::Json(comfort_response)]))
+        Ok(CallToolResult::success(vec![ToolContent::Json(
+            comfort_response,
+        )]))
     }
 }
 
@@ -109,9 +110,7 @@ mod tests {
         let config = crate::Config::default();
         let service = OpenMeteoService::new(config).expect("Valid service");
 
-        let result = service
-            .get_comfort_index(999.0, 11.6, None, None)
-            .await;
+        let result = service.get_comfort_index(999.0, 11.6, None, None).await;
 
         assert!(result.is_err());
     }

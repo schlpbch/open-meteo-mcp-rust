@@ -1,8 +1,8 @@
 //! Marine API client (waves, swells)
 
+use super::{with_retry, OpenMeteoClient, RetryConfig};
 use crate::types::marine::{MarineRequest, MarineResponse};
 use crate::Result;
-use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {
     /// Get marine conditions (wave and swell data)
@@ -18,11 +18,7 @@ impl OpenMeteoClient {
 
         let url = format!("{}/marine", self.base_urls.marine);
 
-        let response = self.http_client
-            .get(&url)
-            .query(req)
-            .send()
-            .await?;
+        let response = self.http_client.get(&url).query(req).send().await?;
 
         OpenMeteoClient::validate_response_status(response.status())?;
 

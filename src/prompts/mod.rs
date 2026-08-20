@@ -29,11 +29,11 @@ impl OpenMeteoService {
     ) -> std::result::Result<CallToolResult, McpError> {
         let resort_info = resort
             .as_ref()
-            .map(|r| format!("for {}", r))
+            .map(|r| format!("for {r}"))
             .unwrap_or_default();
         let date_info = dates
             .as_ref()
-            .map(|d| format!("on {}", d))
+            .map(|d| format!("on {d}"))
             .unwrap_or_default();
         let dates_for_format = if date_info.is_empty() {
             "the requested dates".to_string()
@@ -42,7 +42,7 @@ impl OpenMeteoService {
         };
 
         let prompt = format!(
-            r#"# Ski Trip Weather Planning {} {}
+            r#"# Ski Trip Weather Planning {resort_info} {date_info}
 
 Follow this workflow to assess ski conditions:
 
@@ -85,7 +85,7 @@ Combine data to determine:
 - **Poor**: Insufficient snow, warm temps (>5°C), poor weather, limited visibility
 
 ## Step 5: Provide Recommendations
-Based on {}:
+Based on {dates_for_format}:
 - Best days to ski (weather + snow quality)
 - Gear recommendations (layers, goggles for flat light, avalanche awareness)
 - Safety warnings (wind, visibility, avalanche risk)
@@ -102,10 +102,7 @@ Based on {}:
 **Ski Assessment**: [Excellent/Good/Fair/Poor with reasoning]
 **Best Days**: [Specific dates with why]
 **Recommendations**: [Gear, safety, alternatives]
-"#,
-            resort_info,
-            date_info,
-            dates_for_format
+"#
         );
 
         tracing::debug!("Generating ski trip weather prompt");
@@ -127,21 +124,21 @@ Based on {}:
         let activity_str = activity.unwrap_or_else(|| "outdoor activity".to_string());
         let location_str = location
             .as_ref()
-            .map(|l| format!("near {}", l))
+            .map(|l| format!("near {l}"))
             .unwrap_or_else(|| "your chosen location".to_string());
         let date_str = dates
             .as_ref()
-            .map(|d| format!("on {}", d))
+            .map(|d| format!("on {d}"))
             .unwrap_or_else(|| "your requested dates".to_string());
 
         let prompt = format!(
             r#"# Weather-Aware Outdoor Activity Planning
 
-Planning: {} {}
-Dates: {}
+Planning: {activity_str} {location_str}
+Dates: {date_str}
 
 ## Step 1: Identify Location & Activity Details
-- Activity type: {}
+- Activity type: {activity_str}
 - Location coordinates: Use search_location tool to find coordinates
 - Elevation: Higher elevations have different weather patterns
 - Activity sensitivity level:
@@ -195,11 +192,7 @@ Based on the activity:
 **Activity Feasibility**: [Excellent/Good/Fair/Poor]
 **Best Times**: [Specific dates and times]
 **Recommendations**: [Equipment, safety measures, alternatives]
-"#,
-            activity_str,
-            location_str,
-            date_str,
-            activity_str
+"#
         );
 
         tracing::debug!("Generating outdoor activity prompt");
@@ -217,18 +210,18 @@ Based on the activity:
     ) -> std::result::Result<CallToolResult, McpError> {
         let dest_str = destination
             .as_ref()
-            .map(|d| format!("to {}", d))
+            .map(|d| format!("to {d}"))
             .unwrap_or_else(|| "your destination".to_string());
         let date_str = dates
             .as_ref()
-            .map(|d| format!("from {}", d))
+            .map(|d| format!("from {d}"))
             .unwrap_or_else(|| "your requested dates".to_string());
 
         let prompt = format!(
             r#"# Weather-Aware Travel Planning
 
-Destination: {}
-Dates: {}
+Destination: {dest_str}
+Dates: {date_str}
 
 ## Step 1: Location Research
 - Primary destination coordinates
@@ -294,8 +287,7 @@ Use get_historical_weather for:
 **Packing List**: [Climate-appropriate gear]
 **Activity Suggestions**: [What to do in given weather]
 **Contingency Plan**: [Rainy day alternatives]
-"#,
-            dest_str, date_str
+"#
         );
 
         tracing::debug!("Generating travel planning prompt");
@@ -313,7 +305,10 @@ mod tests {
         let service = OpenMeteoService::new(config).expect("Valid service");
 
         let result = service
-            .ski_trip_weather_prompt(Some("Zermatt".to_string()), Some("next weekend".to_string()))
+            .ski_trip_weather_prompt(
+                Some("Zermatt".to_string()),
+                Some("next weekend".to_string()),
+            )
             .await;
 
         assert!(result.is_ok());

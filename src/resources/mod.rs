@@ -39,9 +39,7 @@ impl OpenMeteoService {
     /// - 0-99: WMO weather codes with descriptions
     /// - Each code with category, icon, and travel impact assessment
     /// - Examples: 0=Clear sky, 1=Mainly clear, 3=Overcast, 51=Light drizzle, 80=Moderate rain showers
-    pub async fn get_weather_codes(
-        &self,
-    ) -> std::result::Result<CallToolResult, McpError> {
+    pub async fn get_weather_codes(&self) -> std::result::Result<CallToolResult, McpError> {
         let data = include_str!("data/weather-codes.json");
         tracing::debug!("Retrieving weather codes resource");
         Ok(CallToolResult::success(vec![ToolContent::Text(
@@ -67,9 +65,7 @@ impl OpenMeteoService {
     /// - Daily parameters: min/max temperature, precipitation sum, weather codes, etc.
     /// - Snow parameters: snow depth, snowfall, snow water equivalent
     /// - Each parameter with unit, description, and data type
-    pub async fn get_weather_parameters(
-        &self,
-    ) -> std::result::Result<CallToolResult, McpError> {
+    pub async fn get_weather_parameters(&self) -> std::result::Result<CallToolResult, McpError> {
         let data = include_str!("data/weather-parameters.json");
         tracing::debug!("Retrieving weather parameters resource");
         Ok(CallToolResult::success(vec![ToolContent::Text(
@@ -96,9 +92,7 @@ impl OpenMeteoService {
     /// - US AQI (0-500): Good, Moderate, Unhealthy for Sensitive, Unhealthy, Very Unhealthy, Hazardous
     /// - UV Index levels (0-11+): Low, Moderate, High, Very High, Extreme
     /// - Pollen levels and health recommendations
-    pub async fn get_aqi_reference(
-        &self,
-    ) -> std::result::Result<CallToolResult, McpError> {
+    pub async fn get_aqi_reference(&self) -> std::result::Result<CallToolResult, McpError> {
         let data = include_str!("data/aqi-reference.json");
         tracing::debug!("Retrieving AQI reference resource");
         Ok(CallToolResult::success(vec![ToolContent::Text(
@@ -128,9 +122,7 @@ impl OpenMeteoService {
     /// - Lakes: Lake Geneva, Lake Zurich, Lake Lucerne, etc.
     ///
     /// Each location includes: name, latitude, longitude, elevation (meters)
-    pub async fn get_swiss_locations(
-        &self,
-    ) -> std::result::Result<CallToolResult, McpError> {
+    pub async fn get_swiss_locations(&self) -> std::result::Result<CallToolResult, McpError> {
         let data = include_str!("data/swiss-locations.json");
         tracing::debug!("Retrieving Swiss locations resource");
         Ok(CallToolResult::success(vec![ToolContent::Text(

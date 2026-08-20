@@ -1,8 +1,8 @@
 //! Archive API client (historical weather data)
 
+use super::{with_retry, OpenMeteoClient, RetryConfig};
 use crate::types::weather::{WeatherRequest, WeatherResponse};
 use crate::{Error, Result};
-use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {
     /// Get historical weather data (1940-present)
@@ -37,7 +37,8 @@ impl OpenMeteoClient {
 
         let url = format!("{}/archive", self.base_urls.archive);
 
-        let response = self.http_client
+        let response = self
+            .http_client
             .get(&url)
             .query(req)
             .query(&[("start_date", start_date)])
@@ -113,7 +114,7 @@ fn is_valid_date_format(date_str: &str) -> bool {
     let month: u32 = parts[1].parse().unwrap_or(0);
     let day: u32 = parts[2].parse().unwrap_or(0);
 
-    month >= 1 && month <= 12 && day >= 1 && day <= 31
+    (1..=12).contains(&month) && (1..=31).contains(&day)
 }
 
 #[cfg(test)]

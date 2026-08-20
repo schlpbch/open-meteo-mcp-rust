@@ -6,22 +6,22 @@
 //! - Resource and prompt handling
 //! - Full MCP protocol compliance
 
-pub mod weather;
-pub mod location;
-pub mod location_swiss;
 pub mod air_quality;
-pub mod marine;
-pub mod snow;
 pub mod alerts;
 pub mod astronomy;
 pub mod comfort;
 pub mod comparison;
 pub mod historical;
+pub mod location;
+pub mod location_swiss;
+pub mod marine;
+pub mod snow;
+pub mod weather;
 
 use crate::service::OpenMeteoService;
 use crate::{CallToolResult, McpError, ToolContent};
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Ping response for connectivity testing
 #[derive(Debug, Serialize, Deserialize, JsonSchema)]
@@ -41,7 +41,7 @@ impl OpenMeteoService {
         };
 
         let json = serde_json::to_string_pretty(&response)
-            .map_err(|e| McpError::InternalError(format!("Serialization error: {}", e)))?;
+            .map_err(|e| McpError::InternalError(format!("Serialization error: {e}")))?;
 
         Ok(CallToolResult::success(vec![ToolContent::Text(json)]))
     }

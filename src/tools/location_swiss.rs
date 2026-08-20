@@ -45,23 +45,32 @@ impl OpenMeteoService {
             .await
             .map_err(|e| match e {
                 crate::Error::HttpClient(http_err) => {
-                    McpError::InternalError(format!("HTTP request failed: {}", http_err))
+                    McpError::InternalError(format!("HTTP request failed: {http_err}"))
                 }
                 crate::Error::ApiError(msg) => McpError::ToolError(msg),
                 crate::Error::Timeout(_) => {
                     McpError::Timeout("Swiss location search timed out".to_string())
                 }
                 crate::Error::RateLimit { seconds } => {
-                    McpError::RateLimit(format!("Rate limited, retry after {} seconds", seconds))
+                    McpError::RateLimit(format!("Rate limited, retry after {seconds} seconds"))
                 }
                 _ => McpError::InternalError(e.to_string()),
             })?;
 
         // Filter results to Swiss locations only
-        let swiss_results: Vec<Location> = response.results.into_iter()
+        let swiss_results: Vec<Location> = response
+            .results
+            .into_iter()
             .filter(|loc| {
-                loc.country_code.as_ref().map(|c| c == "CH").unwrap_or(false)
-                    || loc.country.as_ref().map(|c| c.contains("Switzerland")).unwrap_or(false)
+                loc.country_code
+                    .as_ref()
+                    .map(|c| c == "CH")
+                    .unwrap_or(false)
+                    || loc
+                        .country
+                        .as_ref()
+                        .map(|c| c.contains("Switzerland"))
+                        .unwrap_or(false)
             })
             .collect();
 
@@ -69,7 +78,9 @@ impl OpenMeteoService {
             "results": swiss_results
         });
 
-        Ok(CallToolResult::success(vec![ToolContent::Json(filtered_response)]))
+        Ok(CallToolResult::success(vec![ToolContent::Json(
+            filtered_response,
+        )]))
     }
 }
 

@@ -1,8 +1,8 @@
 //! Integration tests with wiremock fixtures
 
-use open_meteo_mcp::{OpenMeteoClient, client::BaseUrls};
+use open_meteo_mcp::{client::BaseUrls, OpenMeteoClient};
 use std::sync::Arc;
-use wiremock::{Mock, MockServer, ResponseTemplate, matchers};
+use wiremock::{matchers, Mock, MockServer, ResponseTemplate};
 
 #[tokio::test]
 async fn test_get_weather_success() {
@@ -107,7 +107,7 @@ async fn test_invalid_coordinates_rejected() {
 
     // Try with invalid latitude
     let req_invalid = open_meteo_mcp::types::weather::WeatherRequest {
-        latitude: 999.0,  // Out of range
+        latitude: 999.0, // Out of range
         longitude: 11.6,
         ..Default::default()
     };

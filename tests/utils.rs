@@ -4,16 +4,15 @@ use std::fs;
 
 /// Load a fixture file from tests/fixtures directory
 pub fn load_fixture(filename: &str) -> String {
-    let path = format!("tests/fixtures/{}", filename);
-    fs::read_to_string(&path)
-        .unwrap_or_else(|e| panic!("Failed to load fixture {}: {}", filename, e))
+    let path = format!("tests/fixtures/{filename}");
+    fs::read_to_string(&path).unwrap_or_else(|e| panic!("Failed to load fixture {filename}: {e}"))
 }
 
 /// Parse fixture JSON into type
 pub fn parse_fixture<T: serde::de::DeserializeOwned>(filename: &str) -> T {
     let json = load_fixture(filename);
     serde_json::from_str(&json)
-        .unwrap_or_else(|e| panic!("Failed to parse fixture {}: {}", filename, e))
+        .unwrap_or_else(|e| panic!("Failed to parse fixture {filename}: {e}"))
 }
 
 /// Test coordinates - Valid

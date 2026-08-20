@@ -40,23 +40,25 @@ impl OpenMeteoService {
             .await
             .map_err(|e| match e {
                 crate::Error::HttpClient(http_err) => {
-                    McpError::InternalError(format!("HTTP request failed: {}", http_err))
+                    McpError::InternalError(format!("HTTP request failed: {http_err}"))
                 }
                 crate::Error::ApiError(msg) => McpError::ToolError(msg),
                 crate::Error::Timeout(_) => {
                     McpError::Timeout("Geocoding request timed out".to_string())
                 }
                 crate::Error::RateLimit { seconds } => {
-                    McpError::RateLimit(format!("Rate limited, retry after {} seconds", seconds))
+                    McpError::RateLimit(format!("Rate limited, retry after {seconds} seconds"))
                 }
                 _ => McpError::InternalError(e.to_string()),
             })?;
 
         // Format response as JSON
         let json_response = serde_json::to_value(&response)
-            .map_err(|e| McpError::InternalError(format!("JSON serialization error: {}", e)))?;
+            .map_err(|e| McpError::InternalError(format!("JSON serialization error: {e}")))?;
 
-        Ok(CallToolResult::success(vec![ToolContent::Json(json_response)]))
+        Ok(CallToolResult::success(vec![ToolContent::Json(
+            json_response,
+        )]))
     }
 }
 

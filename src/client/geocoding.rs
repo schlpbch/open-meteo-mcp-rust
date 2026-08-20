@@ -1,8 +1,8 @@
 //! Geocoding API client
 
+use super::{with_retry, OpenMeteoClient, RetryConfig};
 use crate::types::location::{GeocodeRequest, GeocodeResponse};
 use crate::{Error, Result};
-use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {
     /// Search for locations by name (geocoding)
@@ -21,11 +21,7 @@ impl OpenMeteoClient {
 
         let url = format!("{}/search", self.base_urls.geocoding);
 
-        let response = self.http_client
-            .get(&url)
-            .query(req)
-            .send()
-            .await?;
+        let response = self.http_client.get(&url).query(req).send().await?;
 
         OpenMeteoClient::validate_response_status(response.status())?;
 

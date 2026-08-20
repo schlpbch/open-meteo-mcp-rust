@@ -1,7 +1,7 @@
 //! Weather alerts API types
 
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Request for weather alerts
 #[derive(Debug, Clone, Serialize)]

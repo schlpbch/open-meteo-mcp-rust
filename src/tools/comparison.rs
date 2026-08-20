@@ -35,9 +35,8 @@ impl OpenMeteoService {
 
         // Validate all locations
         for (lat, lon) in &locations {
-            crate::error::validate_coordinates(*lat, *lon).map_err(|e| {
-                McpError::InvalidParameter(e.to_string())
-            })?;
+            crate::error::validate_coordinates(*lat, *lon)
+                .map_err(|e| McpError::InvalidParameter(e.to_string()))?;
         }
 
         // Fetch weather for each location
@@ -62,9 +61,9 @@ impl OpenMeteoService {
                     }));
                 }
                 Err(_) => {
-                    return Err(McpError::ToolError(
-                        format!("Failed to fetch weather for location ({}, {})", latitude, longitude)
-                    ));
+                    return Err(McpError::ToolError(format!(
+                        "Failed to fetch weather for location ({latitude}, {longitude})"
+                    )));
                 }
             }
         }
@@ -75,7 +74,9 @@ impl OpenMeteoService {
             "count": location_weathers.len()
         });
 
-        Ok(CallToolResult::success(vec![ToolContent::Json(comparison_response)]))
+        Ok(CallToolResult::success(vec![ToolContent::Json(
+            comparison_response,
+        )]))
     }
 }
 
@@ -88,7 +89,9 @@ mod tests {
         let config = crate::Config::default();
         let service = OpenMeteoService::new(config).expect("Valid service");
 
-        let result = service.compare_locations(vec![(48.1, 11.6)], None, None, None).await;
+        let result = service
+            .compare_locations(vec![(48.1, 11.6)], None, None, None)
+            .await;
 
         assert!(result.is_err());
         match result {

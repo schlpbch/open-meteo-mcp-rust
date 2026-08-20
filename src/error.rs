@@ -113,19 +113,19 @@ impl From<Error> for McpError {
     fn from(err: Error) -> Self {
         match err {
             Error::InvalidCoordinates { lat, lon } => {
-                McpError::InvalidParameter(format!("Invalid coordinates: lat={}, lon={}", lat, lon))
+                McpError::InvalidParameter(format!("Invalid coordinates: lat={lat}, lon={lon}"))
             }
             Error::InvalidParameter(msg) => McpError::InvalidParameter(msg),
             Error::RateLimit { seconds } => {
-                McpError::RateLimit(format!("Retry after {} seconds", seconds))
+                McpError::RateLimit(format!("Retry after {seconds} seconds"))
             }
-            Error::Timeout(secs) => McpError::Timeout(format!("Timeout after {} seconds", secs)),
+            Error::Timeout(secs) => McpError::Timeout(format!("Timeout after {secs} seconds")),
             Error::ApiError(msg) => McpError::ToolError(msg),
-            Error::HttpClient(e) => McpError::InternalError(format!("HTTP error: {}", e)),
-            Error::Serialization(e) => McpError::InternalError(format!("Serialization error: {}", e)),
+            Error::HttpClient(e) => McpError::InternalError(format!("HTTP error: {e}")),
+            Error::Serialization(e) => McpError::InternalError(format!("Serialization error: {e}")),
             Error::Mcp(msg) => McpError::InternalError(msg),
-            Error::Config(msg) => McpError::InternalError(format!("Config error: {}", msg)),
-            Error::Io(e) => McpError::InternalError(format!("IO error: {}", e)),
+            Error::Config(msg) => McpError::InternalError(format!("Config error: {msg}")),
+            Error::Io(e) => McpError::InternalError(format!("IO error: {e}")),
             Error::Internal(msg) => McpError::InternalError(msg),
         }
     }

@@ -1,7 +1,7 @@
 //! Weather API types
 
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Request for weather forecast data
 #[derive(Debug, Clone, Serialize)]
@@ -68,10 +68,10 @@ impl WeatherRequest {
 
         // Validate forecast_days range (Open-Meteo supports 1-16)
         if let Some(days) = self.forecast_days {
-            if days < 1 || days > 16 {
-                return Err(crate::Error::InvalidParameter(
-                    format!("forecast_days must be between 1 and 16, got {}", days),
-                ));
+            if !(1..=16).contains(&days) {
+                return Err(crate::Error::InvalidParameter(format!(
+                    "forecast_days must be between 1 and 16, got {days}"
+                )));
             }
         }
 
@@ -235,13 +235,13 @@ mod tests {
         let invalid_forecast = WeatherRequest {
             latitude: 48.1,
             longitude: 11.6,
-            forecast_days: Some(20),  // Out of range
+            forecast_days: Some(20), // Out of range
             ..Default::default()
         };
         assert!(invalid_forecast.validate().is_err());
 
         let invalid_coords = WeatherRequest {
-            latitude: 999.0,  // Out of range
+            latitude: 999.0, // Out of range
             longitude: 11.6,
             ..Default::default()
         };

@@ -77,7 +77,7 @@ fn test_service_respects_config_timeout() {
 fn test_service_with_invalid_config_port_zero() {
     let mut config = Config::default();
     config.port = 0; // Invalid port
-    // Service creation might fail or ignore port in some cases
+                     // Service creation might fail or ignore port in some cases
     let _ = OpenMeteoService::new(config);
 }
 

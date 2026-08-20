@@ -39,8 +39,7 @@ impl OpenMeteoService {
         req.validate().map_err(|e| match e {
             crate::Error::InvalidCoordinates { lat, lon } => {
                 McpError::InvalidParameter(format!(
-                    "Invalid coordinates: latitude must be -90..90, got {}, longitude must be -180..180, got {}",
-                    lat, lon
+                    "Invalid coordinates: latitude must be -90..90, got {lat}, longitude must be -180..180, got {lon}"
                 ))
             }
             crate::Error::InvalidParameter(msg) => McpError::InvalidParameter(msg),

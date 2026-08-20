@@ -1,7 +1,7 @@
 //! Geocoding/Location types
 
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Request for location search/geocoding
 #[derive(Debug, Clone, Serialize)]
@@ -43,10 +43,10 @@ impl GeocodeRequest {
 
         // Validate result count (API typically limits to 1-100)
         if let Some(count) = self.count {
-            if count < 1 || count > 100 {
-                return Err(crate::Error::InvalidParameter(
-                    format!("count must be between 1 and 100, got {}", count),
-                ));
+            if !(1..=100).contains(&count) {
+                return Err(crate::Error::InvalidParameter(format!(
+                    "count must be between 1 and 100, got {count}"
+                )));
             }
         }
 

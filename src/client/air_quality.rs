@@ -1,8 +1,8 @@
 //! Air Quality API client
 
+use super::{with_retry, OpenMeteoClient, RetryConfig};
 use crate::types::air_quality::{AirQualityRequest, AirQualityResponse};
 use crate::Result;
-use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {
     /// Get air quality data
@@ -18,11 +18,7 @@ impl OpenMeteoClient {
 
         let url = format!("{}/air_quality", self.base_urls.air_quality);
 
-        let response = self.http_client
-            .get(&url)
-            .query(req)
-            .send()
-            .await?;
+        let response = self.http_client.get(&url).query(req).send().await?;
 
         OpenMeteoClient::validate_response_status(response.status())?;
 

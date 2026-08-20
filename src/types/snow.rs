@@ -1,7 +1,7 @@
 //! Snow conditions API types
 
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Request for snow conditions data
 #[derive(Debug, Clone, Serialize)]
@@ -50,10 +50,10 @@ impl SnowRequest {
         crate::error::validate_coordinates(self.latitude, self.longitude)?;
 
         if let Some(days) = self.forecast_days {
-            if days < 1 || days > 16 {
-                return Err(crate::Error::InvalidParameter(
-                    format!("forecast_days must be between 1 and 16, got {}", days),
-                ));
+            if !(1..=16).contains(&days) {
+                return Err(crate::Error::InvalidParameter(format!(
+                    "forecast_days must be between 1 and 16, got {days}"
+                )));
             }
         }
 

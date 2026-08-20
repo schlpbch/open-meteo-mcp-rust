@@ -8,11 +8,9 @@ async fn test_get_snow_conditions_success_minimal() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        48.1,
-        11.6,
-        None, None, None
-    ).await;
+    let result = service
+        .get_snow_conditions(48.1, 11.6, None, None, None)
+        .await;
 
     assert!(result.is_ok());
 }
@@ -22,13 +20,9 @@ async fn test_get_snow_conditions_forecast_days_max() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        48.1,
-        11.6,
-        None,
-        None,
-        Some(16)
-    ).await;
+    let result = service
+        .get_snow_conditions(48.1, 11.6, None, None, Some(16))
+        .await;
 
     assert!(result.is_ok(), "forecast_days 16 should be valid");
 }
@@ -38,11 +32,9 @@ async fn test_get_snow_conditions_validation_latitude() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        90.001,
-        11.6,
-        None, None, None
-    ).await;
+    let result = service
+        .get_snow_conditions(90.001, 11.6, None, None, None)
+        .await;
 
     assert!(result.is_err(), "Invalid latitude should be rejected");
 }
@@ -52,11 +44,9 @@ async fn test_get_snow_conditions_validation_longitude() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        48.1,
-        180.001,
-        None, None, None
-    ).await;
+    let result = service
+        .get_snow_conditions(48.1, 180.001, None, None, None)
+        .await;
 
     assert!(result.is_err(), "Invalid longitude should be rejected");
 }
@@ -66,11 +56,9 @@ async fn test_get_snow_conditions_boundary_coordinates() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        90.0,
-        180.0,
-        None, None, None
-    ).await;
+    let result = service
+        .get_snow_conditions(90.0, 180.0, None, None, None)
+        .await;
 
     assert!(result.is_ok(), "Boundary coordinates should be valid");
 }
@@ -80,11 +68,9 @@ async fn test_get_snow_conditions_forecast_days_invalid_zero() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        48.1,
-        11.6,
-        None, None, Some(0)
-    ).await;
+    let result = service
+        .get_snow_conditions(48.1, 11.6, None, None, Some(0))
+        .await;
 
     assert!(result.is_err(), "forecast_days 0 should be invalid");
 }
@@ -94,11 +80,9 @@ async fn test_get_snow_conditions_forecast_days_invalid_too_high() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        48.1,
-        11.6,
-        None, None, Some(17)
-    ).await;
+    let result = service
+        .get_snow_conditions(48.1, 11.6, None, None, Some(17))
+        .await;
 
     assert!(result.is_err(), "forecast_days > 16 should be invalid");
 }
@@ -108,11 +92,9 @@ async fn test_get_snow_conditions_forecast_days_valid() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        48.1,
-        11.6,
-        None, None, Some(7)
-    ).await;
+    let result = service
+        .get_snow_conditions(48.1, 11.6, None, None, Some(7))
+        .await;
 
     assert!(result.is_ok());
 }
@@ -122,11 +104,9 @@ async fn test_get_snow_conditions_null_island() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_snow_conditions(
-        0.0,
-        0.0,
-        None, None, None
-    ).await;
+    let result = service
+        .get_snow_conditions(0.0, 0.0, None, None, None)
+        .await;
 
     assert!(result.is_ok());
 }

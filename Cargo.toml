@@ -9,6 +9,12 @@ repository = "https://github.com/schlpbch/open-meteo-mcp-rust"
 keywords = ["mcp", "weather", "open-meteo", "climate"]
 authors = ["Andreas Schlapbach <schlpbch@gmail.com>"]
 
+[lints.clippy]
+# Tests consistently use `let mut x = T::default(); x.field = value;` to build
+# scenario-specific configs from a readable baseline — allow it project-wide
+# rather than converting ~30 call sites to verbose struct-update syntax.
+field_reassign_with_default = "allow"
+
 [dependencies]
 # MCP Protocol — official Rust SDK
 rmcp = { version = "3.1", features = ["server", "transport-io", "transport-streamable-http-server"] }

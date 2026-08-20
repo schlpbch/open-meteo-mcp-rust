@@ -1,7 +1,7 @@
 //! Air quality API types
 
-use serde::{Deserialize, Serialize};
 use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Request for air quality data
 #[derive(Debug, Clone, Serialize)]

@@ -44,9 +44,7 @@ async fn test_get_air_quality_tool_validation() {
     let service = OpenMeteoService::new(config).expect("Valid service");
 
     // Test with invalid longitude
-    let result = service
-        .get_air_quality(48.1, 999.0, None, None)
-        .await;
+    let result = service.get_air_quality(48.1, 999.0, None, None).await;
 
     assert!(result.is_err());
 }
@@ -108,9 +106,7 @@ async fn test_get_comfort_index_tool_validation() {
     let service = OpenMeteoService::new(config).expect("Valid service");
 
     // Test with invalid latitude
-    let result = service
-        .get_comfort_index(999.0, 11.6, None, None)
-        .await;
+    let result = service.get_comfort_index(999.0, 11.6, None, None).await;
 
     assert!(result.is_err());
 }
@@ -160,7 +156,14 @@ async fn test_get_historical_weather_tool_validation() {
 
     // Test with invalid date format
     let result = service
-        .get_historical_weather(48.1, 11.6, "2020/01/01".to_string(), "2020-12-31".to_string(), None, None)
+        .get_historical_weather(
+            48.1,
+            11.6,
+            "2020/01/01".to_string(),
+            "2020-12-31".to_string(),
+            None,
+            None,
+        )
         .await;
 
     assert!(result.is_err());

@@ -31,7 +31,7 @@ impl fmt::Display for TransportMode {
         match self {
             TransportMode::Stdio => write!(f, "stdio"),
             TransportMode::Sse { host, port } => {
-                write!(f, "sse ({}:{})", host, port)
+                write!(f, "sse ({host}:{port})")
             }
         }
     }
@@ -83,7 +83,7 @@ impl TransportConfig {
         match &self.mode {
             TransportMode::Sse { host, port } => {
                 if port == &0 || port > &65535 {
-                    return Err(format!("Invalid port number: {} (must be 1-65535)", port));
+                    return Err(format!("Invalid port number: {port} (must be 1-65535)"));
                 }
                 if host.is_empty() {
                     return Err("Host cannot be empty".to_string());

@@ -1,8 +1,8 @@
 //! Location comparison types
 
-use serde::{Deserialize, Serialize};
-use schemars::JsonSchema;
 use crate::types::weather::WeatherResponse;
+use schemars::JsonSchema;
+use serde::{Deserialize, Serialize};
 
 /// Request to compare weather across multiple locations
 #[derive(Debug, Clone, Serialize)]
@@ -49,13 +49,11 @@ mod tests {
     #[test]
     fn test_comparison_request_validation() {
         let req = ComparisonRequest {
-            locations: vec![
-                LocationCoords {
-                    latitude: 48.1,
-                    longitude: 11.6,
-                    name: Some("Munich".to_string()),
-                },
-            ],
+            locations: vec![LocationCoords {
+                latitude: 48.1,
+                longitude: 11.6,
+                name: Some("Munich".to_string()),
+            }],
             hourly: None,
             daily: None,
             forecast_days: Some(7),

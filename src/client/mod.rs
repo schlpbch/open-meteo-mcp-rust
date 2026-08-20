@@ -1,10 +1,10 @@
 //! HTTP client for Open-Meteo API
 
-pub mod weather;
-pub mod geocoding;
 pub mod air_quality;
-pub mod marine;
 pub mod archive;
+pub mod geocoding;
+pub mod marine;
+pub mod weather;
 
 use crate::{Error, Result};
 use std::sync::Arc;
@@ -102,10 +102,7 @@ impl Default for RetryConfig {
 }
 
 /// Execute a function with exponential backoff retry logic
-pub async fn with_retry<F, T>(
-    mut f: impl FnMut() -> F,
-    config: RetryConfig,
-) -> Result<T>
+pub async fn with_retry<F, T>(mut f: impl FnMut() -> F, config: RetryConfig) -> Result<T>
 where
     F: std::future::Future<Output = Result<T>>,
 {
@@ -166,9 +163,9 @@ mod tests {
     fn test_validate_response_status() {
         assert!(OpenMeteoClient::validate_response_status(reqwest::StatusCode::OK).is_ok());
         assert!(OpenMeteoClient::validate_response_status(reqwest::StatusCode::NOT_FOUND).is_err());
-        assert!(
-            OpenMeteoClient::validate_response_status(reqwest::StatusCode::INTERNAL_SERVER_ERROR)
-                .is_err()
-        );
+        assert!(OpenMeteoClient::validate_response_status(
+            reqwest::StatusCode::INTERNAL_SERVER_ERROR
+        )
+        .is_err());
     }
 }

@@ -34,8 +34,7 @@ impl OpenMeteoService {
         req.validate().map_err(|e| match e {
             crate::Error::InvalidCoordinates { lat, lon } => {
                 McpError::InvalidParameter(format!(
-                    "Invalid coordinates: latitude must be -90..90, got {}, longitude must be -180..180, got {}",
-                    lat, lon
+                    "Invalid coordinates: latitude must be -90..90, got {lat}, longitude must be -180..180, got {lon}"
                 ))
             }
             crate::Error::InvalidParameter(msg) => McpError::InvalidParameter(msg),
@@ -49,23 +48,25 @@ impl OpenMeteoService {
             .await
             .map_err(|e| match e {
                 crate::Error::HttpClient(http_err) => {
-                    McpError::InternalError(format!("HTTP request failed: {}", http_err))
+                    McpError::InternalError(format!("HTTP request failed: {http_err}"))
                 }
                 crate::Error::ApiError(msg) => McpError::ToolError(msg),
                 crate::Error::Timeout(_) => {
                     McpError::Timeout("Air quality API request timed out".to_string())
                 }
                 crate::Error::RateLimit { seconds } => {
-                    McpError::RateLimit(format!("Rate limited, retry after {} seconds", seconds))
+                    McpError::RateLimit(format!("Rate limited, retry after {seconds} seconds"))
                 }
                 _ => McpError::InternalError(e.to_string()),
             })?;
 
         // Format response as JSON
         let json_response = serde_json::to_value(&response)
-            .map_err(|e| McpError::InternalError(format!("JSON serialization error: {}", e)))?;
+            .map_err(|e| McpError::InternalError(format!("JSON serialization error: {e}")))?;
 
-        Ok(CallToolResult::success(vec![ToolContent::Json(json_response)]))
+        Ok(CallToolResult::success(vec![ToolContent::Json(
+            json_response,
+        )]))
     }
 }
 
@@ -78,9 +79,7 @@ mod tests {
         let config = crate::Config::default();
         let service = OpenMeteoService::new(config).expect("Valid service");
 
-        let result = service
-            .get_air_quality(999.0, 11.6, None, None)
-            .await;
+        let result = service.get_air_quality(999.0, 11.6, None, None).await;
 
         assert!(result.is_err());
         match result {
@@ -96,9 +95,7 @@ mod tests {
         let config = crate::Config::default();
         let service = OpenMeteoService::new(config).expect("Valid service");
 
-        let result = service
-            .get_air_quality(48.1, 999.0, None, None)
-            .await;
+        let result = service.get_air_quality(48.1, 999.0, None, None).await;
 
         assert!(result.is_err());
         match result {

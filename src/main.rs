@@ -34,8 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let log_level = args.log_level.unwrap_or_else(|| "info".to_string());
     tracing_subscriber::fmt()
         .with_env_filter(
-            EnvFilter::try_from_env("LOG_LEVEL")
-                .unwrap_or_else(|_| EnvFilter::new(&log_level))
+            EnvFilter::try_from_env("LOG_LEVEL").unwrap_or_else(|_| EnvFilter::new(&log_level)),
         )
         .with_writer(std::io::stderr)
         .init();
@@ -66,7 +65,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
         Err(e) => {
             tracing::error!(error = ?e, "Ping tool validation failed");
-            return Err(format!("Service initialization failed: {}", e).into());
+            return Err(format!("Service initialization failed: {e}").into());
         }
     }
 

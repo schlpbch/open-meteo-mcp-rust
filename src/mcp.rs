@@ -501,7 +501,7 @@ impl ServerHandler for OpenMeteoService {
             resources::URI_SWISS_LOCATIONS => extract_text(self.get_swiss_locations().await)?,
             other => {
                 return Err(ErrorData::resource_not_found(
-                    format!("Unknown resource URI: {}", other),
+                    format!("Unknown resource URI: {other}"),
                     None,
                 ))
             }
@@ -573,7 +573,7 @@ impl ServerHandler for OpenMeteoService {
             }
             other => {
                 return Err(ErrorData::invalid_params(
-                    format!("Unknown prompt: {}", other),
+                    format!("Unknown prompt: {other}"),
                     None,
                 ))
             }
@@ -609,8 +609,7 @@ mod tests {
         ] {
             assert!(
                 names.contains(&expected.to_string()),
-                "missing tool: {}",
-                expected
+                "missing tool: {expected}"
             );
         }
     }

@@ -8,11 +8,7 @@ async fn test_get_air_quality_validation_latitude_high() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_air_quality(
-        90.001,
-        11.6,
-        None, None
-    ).await;
+    let result = service.get_air_quality(90.001, 11.6, None, None).await;
 
     assert!(result.is_err(), "Invalid latitude should be rejected");
 }
@@ -22,11 +18,7 @@ async fn test_get_air_quality_validation_latitude_low() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_air_quality(
-        -90.001,
-        11.6,
-        None, None
-    ).await;
+    let result = service.get_air_quality(-90.001, 11.6, None, None).await;
 
     assert!(result.is_err(), "Invalid latitude should be rejected");
 }
@@ -36,11 +28,7 @@ async fn test_get_air_quality_validation_longitude_high() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_air_quality(
-        48.1,
-        180.001,
-        None, None
-    ).await;
+    let result = service.get_air_quality(48.1, 180.001, None, None).await;
 
     assert!(result.is_err(), "Invalid longitude should be rejected");
 }
@@ -50,11 +38,7 @@ async fn test_get_air_quality_validation_longitude_low() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_air_quality(
-        48.1,
-        -180.001,
-        None, None
-    ).await;
+    let result = service.get_air_quality(48.1, -180.001, None, None).await;
 
     assert!(result.is_err(), "Invalid longitude should be rejected");
 }
@@ -84,5 +68,8 @@ fn test_air_quality_request_validation_empty_hourly_daily() {
         ..Default::default()
     };
 
-    assert!(req.validate().is_ok(), "AirQuality with coordinates should be valid");
+    assert!(
+        req.validate().is_ok(),
+        "AirQuality with coordinates should be valid"
+    );
 }

@@ -12,5 +12,8 @@ async fn test_ping_success() {
 
     assert!(result.is_ok(), "Ping should succeed");
     let call_result = result.unwrap();
-    assert!(!call_result.is_error, "Ping response should not be an error");
+    assert!(
+        !call_result.is_error,
+        "Ping response should not be an error"
+    );
 }

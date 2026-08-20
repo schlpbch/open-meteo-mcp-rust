@@ -1,7 +1,7 @@
 //! Error handling and type conversion tests for Open-Meteo MCP
 //! Phase 5: Service layer error handling
 
-use open_meteo_mcp::{Error, McpError, CallToolResult, ToolContent};
+use open_meteo_mcp::{CallToolResult, Error, McpError, ToolContent};
 
 // Error Type Creation Tests
 
@@ -64,15 +64,15 @@ fn test_error_internal_creation() {
 fn test_error_to_mcp_invalid_parameter() {
     let err = Error::InvalidParameter("bad param".to_string());
     let mcp_err: McpError = err.into();
-    assert_eq!(
-        mcp_err.to_string(),
-        "Invalid parameter: bad param"
-    );
+    assert_eq!(mcp_err.to_string(), "Invalid parameter: bad param");
 }
 
 #[test]
 fn test_error_to_mcp_invalid_coordinates() {
-    let err = Error::InvalidCoordinates { lat: 91.0, lon: 200.0 };
+    let err = Error::InvalidCoordinates {
+        lat: 91.0,
+        lon: 200.0,
+    };
     let mcp_err: McpError = err.into();
     assert!(mcp_err.to_string().contains("Invalid parameter"));
     assert!(mcp_err.to_string().contains("91"));

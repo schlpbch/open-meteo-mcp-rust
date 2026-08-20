@@ -1,8 +1,8 @@
 //! Weather API client
 
+use super::{with_retry, OpenMeteoClient, RetryConfig};
 use crate::types::weather::{WeatherRequest, WeatherResponse};
 use crate::Result;
-use super::{OpenMeteoClient, RetryConfig, with_retry};
 
 impl OpenMeteoClient {
     /// Get weather forecast data
@@ -18,11 +18,7 @@ impl OpenMeteoClient {
 
         let url = format!("{}/forecast", self.base_urls.weather);
 
-        let response = self.http_client
-            .get(&url)
-            .query(req)
-            .send()
-            .await?;
+        let response = self.http_client.get(&url).query(req).send().await?;
 
         OpenMeteoClient::validate_response_status(response.status())?;
 
@@ -77,8 +73,10 @@ mod tests {
             ..Default::default()
         };
 
-        assert!(crate::error::validate_coordinates(req_invalid.latitude, req_invalid.longitude)
-            .is_err());
+        assert!(
+            crate::error::validate_coordinates(req_invalid.latitude, req_invalid.longitude)
+                .is_err()
+        );
     }
 
     #[test]

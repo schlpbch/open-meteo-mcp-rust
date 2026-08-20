@@ -26,9 +26,8 @@ impl OpenMeteoService {
         daily: Option<String>,
     ) -> std::result::Result<CallToolResult, McpError> {
         // Validate coordinates
-        crate::error::validate_coordinates(latitude, longitude).map_err(|e| {
-            McpError::InvalidParameter(e.to_string())
-        })?;
+        crate::error::validate_coordinates(latitude, longitude)
+            .map_err(|e| McpError::InvalidParameter(e.to_string()))?;
 
         // Validate date formats
         if !is_valid_date_format(&start_date) {
@@ -45,33 +44,39 @@ impl OpenMeteoService {
         // Fetch historical data
         let response = self
             .api_client()
-            .get_historical_weather(&WeatherRequest {
-                latitude,
-                longitude,
-                hourly,
-                daily,
-                ..Default::default()
-            }, &start_date, &end_date)
+            .get_historical_weather(
+                &WeatherRequest {
+                    latitude,
+                    longitude,
+                    hourly,
+                    daily,
+                    ..Default::default()
+                },
+                &start_date,
+                &end_date,
+            )
             .await
             .map_err(|e| match e {
                 crate::Error::HttpClient(http_err) => {
-                    McpError::InternalError(format!("HTTP request failed: {}", http_err))
+                    McpError::InternalError(format!("HTTP request failed: {http_err}"))
                 }
                 crate::Error::ApiError(msg) => McpError::ToolError(msg),
                 crate::Error::Timeout(_) => {
                     McpError::Timeout("Historical weather request timed out".to_string())
                 }
                 crate::Error::RateLimit { seconds } => {
-                    McpError::RateLimit(format!("Rate limited, retry after {} seconds", seconds))
+                    McpError::RateLimit(format!("Rate limited, retry after {seconds} seconds"))
                 }
                 _ => McpError::InternalError(e.to_string()),
             })?;
 
         // Format response as JSON
         let json_response = serde_json::to_value(&response)
-            .map_err(|e| McpError::InternalError(format!("JSON serialization error: {}", e)))?;
+            .map_err(|e| McpError::InternalError(format!("JSON serialization error: {e}")))?;
 
-        Ok(CallToolResult::success(vec![ToolContent::Json(json_response)]))
+        Ok(CallToolResult::success(vec![ToolContent::Json(
+            json_response,
+        )]))
     }
 }
 
@@ -97,7 +102,7 @@ fn is_valid_date_format(date_str: &str) -> bool {
     let month: u32 = parts[1].parse().unwrap_or(0);
     let day: u32 = parts[2].parse().unwrap_or(0);
 
-    month >= 1 && month <= 12 && day >= 1 && day <= 31
+    (1..=12).contains(&month) && (1..=31).contains(&day)
 }
 
 #[cfg(test)]
@@ -110,7 +115,14 @@ mod tests {
         let service = OpenMeteoService::new(config).expect("Valid service");
 
         let result = service
-            .get_historical_weather(999.0, 11.6, "2020-01-01".to_string(), "2020-12-31".to_string(), None, None)
+            .get_historical_weather(
+                999.0,
+                11.6,
+                "2020-01-01".to_string(),
+                "2020-12-31".to_string(),
+                None,
+                None,
+            )
             .await;
 
         assert!(result.is_err());
@@ -122,7 +134,14 @@ mod tests {
         let service = OpenMeteoService::new(config).expect("Valid service");
 
         let result = service
-            .get_historical_weather(48.1, 11.6, "2020/01/01".to_string(), "2020-12-31".to_string(), None, None)
+            .get_historical_weather(
+                48.1,
+                11.6,
+                "2020/01/01".to_string(),
+                "2020-12-31".to_string(),
+                None,
+                None,
+            )
             .await;
 
         assert!(result.is_err());

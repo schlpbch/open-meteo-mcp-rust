@@ -106,7 +106,7 @@ pub async fn run_server(
 
     let app = create_router(state);
 
-    let addr: SocketAddr = format!("{}:{}", host, port).parse()?;
+    let addr: SocketAddr = format!("{host}:{port}").parse()?;
     let listener = TcpListener::bind(&addr).await?;
 
     info!("SSE transport listening on {}", addr);
