@@ -1,6 +1,9 @@
 //! Tool handler tests for Swiss Location Search
 //! Phase 4: Comprehensive Swiss location search tool testing
 
+mod common;
+
+use common::retry_network;
 use open_meteo_mcp::OpenMeteoService;
 
 #[tokio::test]
@@ -8,9 +11,7 @@ async fn test_search_location_swiss_success() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .search_location_swiss("Zurich".to_string(), None)
-        .await;
+    let result = retry_network(|| service.search_location_swiss("Zurich".to_string(), None)).await;
 
     assert!(result.is_ok(), "Swiss location search should succeed");
 }
@@ -20,9 +21,7 @@ async fn test_search_location_swiss_with_count() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .search_location_swiss("Bern".to_string(), Some(5))
-        .await;
+    let result = retry_network(|| service.search_location_swiss("Bern".to_string(), Some(5))).await;
 
     assert!(result.is_ok());
 }
@@ -67,9 +66,9 @@ async fn test_search_location_swiss_count_valid_boundaries() {
     let service = OpenMeteoService::new(config).expect("Valid service");
 
     for count in [1, 50, 100].iter() {
-        let result = service
-            .search_location_swiss("Basel".to_string(), Some(*count))
-            .await;
+        let result =
+            retry_network(|| service.search_location_swiss("Basel".to_string(), Some(*count)))
+                .await;
 
         assert!(result.is_ok(), "count {count} should be valid");
     }
@@ -81,9 +80,8 @@ async fn test_search_location_swiss_various_cities() {
     let service = OpenMeteoService::new(config).expect("Valid service");
 
     for city in &["Lugano", "Sion", "Thun", "Interlaken"] {
-        let result = service
-            .search_location_swiss(city.to_string(), Some(5))
-            .await;
+        let result =
+            retry_network(|| service.search_location_swiss(city.to_string(), Some(5))).await;
 
         assert!(result.is_ok(), "Swiss city {city} should be searchable");
     }

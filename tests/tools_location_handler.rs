@@ -1,6 +1,9 @@
 //! Tool handler tests for Location/Geocoding
 //! Phase 4: Comprehensive location search tool testing
 
+mod common;
+
+use common::retry_network;
 use open_meteo_mcp::types::location::GeocodeRequest;
 use open_meteo_mcp::OpenMeteoService;
 
@@ -9,9 +12,7 @@ async fn test_search_location_success() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .search_location("Munich".to_string(), None, None)
-        .await;
+    let result = retry_network(|| service.search_location("Munich".to_string(), None, None)).await;
 
     assert!(result.is_ok(), "Location search should succeed");
     let call_result = result.unwrap();
@@ -23,9 +24,8 @@ async fn test_search_location_with_count() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .search_location("Munich".to_string(), Some(5), None)
-        .await;
+    let result =
+        retry_network(|| service.search_location("Munich".to_string(), Some(5), None)).await;
 
     assert!(result.is_ok());
 }
@@ -71,9 +71,9 @@ async fn test_search_location_count_valid_boundaries() {
 
     // Test min and max valid values
     for count in [1, 50, 100].iter() {
-        let result = service
-            .search_location("Munich".to_string(), Some(*count), None)
-            .await;
+        let result =
+            retry_network(|| service.search_location("Munich".to_string(), Some(*count), None))
+                .await;
 
         assert!(result.is_ok(), "count {count} should be valid");
     }
@@ -84,9 +84,7 @@ async fn test_search_location_count_none_default() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .search_location("Munich".to_string(), None, None)
-        .await;
+    let result = retry_network(|| service.search_location("Munich".to_string(), None, None)).await;
 
     assert!(result.is_ok(), "count None should use default");
 }
@@ -96,9 +94,10 @@ async fn test_search_location_with_language() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .search_location("Munich".to_string(), Some(10), Some("en".to_string()))
-        .await;
+    let result = retry_network(|| {
+        service.search_location("Munich".to_string(), Some(10), Some("en".to_string()))
+    })
+    .await;
 
     assert!(result.is_ok());
 }

@@ -1,6 +1,9 @@
 //! Tool handler tests for Weather/Forecast - Phase 4
 //! Comprehensive weather tool testing with all parameters
 
+mod common;
+
+use common::retry_network;
 use open_meteo_mcp::OpenMeteoService;
 
 // ... (copy all 12 tests from tools/weather_handler_test.rs)
@@ -10,9 +13,7 @@ async fn test_get_weather_success_minimal_params() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .get_weather(48.1, 11.6, None, None, None, None)
-        .await;
+    let result = retry_network(|| service.get_weather(48.1, 11.6, None, None, None, None)).await;
 
     assert!(
         result.is_ok(),
@@ -47,7 +48,7 @@ async fn test_get_weather_boundary_latitude_max() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_weather(90.0, 0.0, None, None, None, None).await;
+    let result = retry_network(|| service.get_weather(90.0, 0.0, None, None, None, None)).await;
     assert!(result.is_ok(), "Latitude 90.0 should be valid");
 }
 
@@ -56,9 +57,7 @@ async fn test_get_weather_boundary_longitude_min() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .get_weather(0.0, -180.0, None, None, None, None)
-        .await;
+    let result = retry_network(|| service.get_weather(0.0, -180.0, None, None, None, None)).await;
     assert!(result.is_ok(), "Longitude -180.0 should be valid");
 }
 
@@ -67,7 +66,7 @@ async fn test_get_weather_null_island() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service.get_weather(0.0, 0.0, None, None, None, None).await;
+    let result = retry_network(|| service.get_weather(0.0, 0.0, None, None, None, None)).await;
     assert!(result.is_ok(), "Null Island should be valid");
 }
 
@@ -76,9 +75,8 @@ async fn test_get_weather_forecast_days_valid_boundary() {
     let config = open_meteo_mcp::Config::default();
     let service = OpenMeteoService::new(config).expect("Valid service");
 
-    let result = service
-        .get_weather(48.1, 11.6, None, None, Some(16), None)
-        .await;
+    let result =
+        retry_network(|| service.get_weather(48.1, 11.6, None, None, Some(16), None)).await;
     assert!(result.is_ok(), "forecast_days 16 should be valid");
 }
 
