@@ -3,6 +3,7 @@
 use crate::client::OpenMeteoClient;
 use crate::config::Config;
 use crate::Result;
+use rmcp::handler::server::router::tool::ToolRouter;
 use std::sync::Arc;
 
 /// Main Open-Meteo MCP service
@@ -10,10 +11,12 @@ use std::sync::Arc;
 /// This service is the entry point for all MCP tool and resource operations.
 /// It manages the HTTP client connection pool and coordinates requests to
 /// the Open-Meteo API via the OpenMeteoClient.
+#[derive(Clone)]
 pub struct OpenMeteoService {
     http_client: Arc<reqwest::Client>,
     api_client: OpenMeteoClient,
     config: Config,
+    pub(crate) tool_router: ToolRouter<Self>,
 }
 
 impl OpenMeteoService {
@@ -33,6 +36,7 @@ impl OpenMeteoService {
             http_client,
             api_client,
             config,
+            tool_router: Self::tool_router(),
         })
     }
 

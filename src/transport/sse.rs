@@ -1,27 +1,23 @@
-//! SSE (Server-Sent Events) Transport Implementation
+//! Streamable HTTP Transport Implementation
 //!
-//! HTTP transport for MCP protocol using Server-Sent Events for streaming responses.
+//! HTTP transport for MCP protocol using rmcp's streamable-HTTP transport.
 //! Provides:
-//! - SSE endpoint at `/sse` for MCP protocol messages
+//! - MCP protocol endpoint at `/sse` (POST, streamable HTTP)
 //! - Health check endpoints (`/health`, `/ready`)
 //! - CORS support for web clients
 //! - Graceful shutdown handling
 
 use crate::health::HealthChecker;
 use crate::service::OpenMeteoService;
-use axum::{
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::get,
-    Router, Json,
-};
+use axum::{extract::State, http::StatusCode, response::IntoResponse, routing::get, Json, Router};
+use rmcp::transport::streamable_http_server::session::local::LocalSessionManager;
+use rmcp::transport::streamable_http_server::{StreamableHttpServerConfig, StreamableHttpService};
 use serde_json::json;
 use std::net::SocketAddr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tracing::{debug, error, info};
 use tower_http::cors::CorsLayer;
+use tracing::info;
 
 /// Application state shared across handlers
 #[derive(Clone)]
@@ -69,7 +65,7 @@ async fn root() -> impl IntoResponse {
             "GET /health": "Liveness probe",
             "GET /ready": "Readiness probe",
             "GET /sse/info": "Server information",
-            "GET /sse": "MCP protocol SSE endpoint (connect here)"
+            "POST /sse": "MCP protocol streamable-HTTP endpoint (connect here)"
         },
         "documentation": "https://github.com/schlpbch/open-meteo-mcp-rust"
     });
@@ -78,121 +74,23 @@ async fn root() -> impl IntoResponse {
 
 /// Create axum router with all endpoints
 fn create_router(state: AppState) -> Router {
+    let mcp_service = StreamableHttpService::new(
+        {
+            let service = state.service.clone();
+            move || Ok((*service).clone())
+        },
+        Arc::new(LocalSessionManager::default()),
+        StreamableHttpServerConfig::default(),
+    );
+
     Router::new()
         .route("/", get(root))
         .route("/health", get(health_check))
         .route("/ready", get(readiness_check))
         .route("/sse/info", get(sse_info))
-        .route("/sse", get(sse_endpoint))
+        .nest_service("/sse", mcp_service)
         .with_state(state)
         .layer(CorsLayer::permissive())
-}
-
-/// SSE endpoint for MCP protocol messages
-///
-/// Clients connect via GET /sse and receive server-sent events.
-/// Currently returns server info; future version will handle bidirectional MCP protocol.
-async fn sse_endpoint(
-    State(_state): State<AppState>,
-) -> impl IntoResponse {
-    use futures::stream::{self, StreamExt};
-    use axum::response::sse::{Event, Sse};
-
-    debug!("SSE client connected");
-
-    let stream = stream::once(async {
-        // Send server capabilities
-        let message = json!({
-            "type": "initialize",
-            "version": "2.0",
-            "capabilities": {
-                "tools": {
-                    "listChanged": true
-                },
-                "resources": {
-                    "listChanged": true
-                },
-                "prompts": {
-                    "listChanged": true
-                }
-            },
-            "serverInfo": {
-                "name": "open-meteo-mcp",
-                "version": crate::VERSION
-            }
-        });
-
-        match Event::default().json_data(message) {
-            Ok(event) => Ok(event),
-            Err(e) => {
-                error!("Failed to create SSE event: {}", e);
-                Err("Event serialization failed")
-            }
-        }
-    })
-    .chain(stream::once(async {
-        // Send available tools list
-        let message = json!({
-            "type": "tools/list",
-            "tools": [
-                {
-                    "name": "get_weather",
-                    "description": "Get weather forecast with temperature and precipitation"
-                },
-                {
-                    "name": "get_snow_conditions",
-                    "description": "Get snow conditions and snowfall data"
-                },
-                {
-                    "name": "get_air_quality",
-                    "description": "Get air quality index and pollutant data"
-                },
-                {
-                    "name": "search_location",
-                    "description": "Search for locations by name"
-                },
-                {
-                    "name": "search_location_swiss",
-                    "description": "Search for Swiss locations"
-                },
-                {
-                    "name": "get_weather_alerts",
-                    "description": "Get weather alerts based on thresholds"
-                },
-                {
-                    "name": "get_astronomy",
-                    "description": "Get astronomy data (sunrise, sunset, moon phase)"
-                },
-                {
-                    "name": "get_marine_conditions",
-                    "description": "Get marine and wave conditions"
-                },
-                {
-                    "name": "get_comfort_index",
-                    "description": "Get outdoor activity comfort index"
-                },
-                {
-                    "name": "compare_locations",
-                    "description": "Compare weather across multiple locations"
-                },
-                {
-                    "name": "get_historical_weather",
-                    "description": "Get historical weather data"
-                }
-            ]
-        });
-
-        match Event::default().json_data(message) {
-            Ok(event) => Ok(event),
-            Err(e) => {
-                error!("Failed to create SSE event: {}", e);
-                Err("Event serialization failed")
-            }
-        }
-    }))
-    .boxed();
-
-    Sse::new(stream)
 }
 
 /// HTTP Server configuration and startup
@@ -204,10 +102,7 @@ pub async fn run_server(
     // Port validation: u16 inherently prevents invalid values
 
     let health = Arc::new(HealthChecker::new(30));
-    let state = AppState {
-        service,
-        health,
-    };
+    let state = AppState { service, health };
 
     let app = create_router(state);
 
@@ -237,9 +132,7 @@ async fn shutdown_signal() {
             .await
     };
 
-    let sigint = async {
-        tokio::signal::ctrl_c().await
-    };
+    let sigint = async { tokio::signal::ctrl_c().await };
 
     tokio::select! {
         _ = sigterm => {

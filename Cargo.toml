@@ -11,7 +11,7 @@ authors = ["Andreas Schlapbach <schlpbch@gmail.com>"]
 
 [dependencies]
 # MCP Protocol — official Rust SDK
-rmcp = { version = "3.1", features = ["server", "transport-io"] }
+rmcp = { version = "3.1", features = ["server", "transport-io", "transport-streamable-http-server"] }
 
 # Async runtime
 tokio = { version = "1.40", features = ["full"] }
@@ -54,7 +54,6 @@ clap = { version = "4.5", features = ["derive", "env"] }
 futures = "0.3"
 
 [dev-dependencies]
-mockall = "0.14"
 wiremock = "0.6"
 tokio-test = "0.4"
 assert-json-diff = "2.0"

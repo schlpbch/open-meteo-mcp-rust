@@ -6,6 +6,7 @@
 pub mod client;
 pub mod config;
 pub mod error;
+pub mod mcp;
 pub mod service;
 pub mod tools;
 pub mod types;

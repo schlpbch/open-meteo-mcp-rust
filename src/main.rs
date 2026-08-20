@@ -3,8 +3,6 @@
 //! A Model Context Protocol (MCP) server providing weather, snow, air quality,
 //! and location data via the Open-Meteo API.
 
-mod server;
-
 use clap::Parser;
 use open_meteo_mcp::{Config, OpenMeteoService};
 use std::sync::Arc;
