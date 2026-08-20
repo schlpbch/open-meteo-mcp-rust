@@ -6,7 +6,7 @@ AI development guide for the Open-Meteo MCP Rust project.
 
 **Open Meteo MCP (Rust)** - High-performance Rust implementation of the weather and climate data MCP server providing weather, snow conditions, and air quality data via [Open-Meteo API](https://open-meteo.com/) with minimal binary footprint.
 
-**Status**: v2.0.0 - Production Ready
+**Status**: v1.2.0 - Production Ready
 **Completed**: February 2026 · **rmcp SDK wired up**: August 2026
 **Test Coverage**: 280 tests | 72% code coverage (feature-complete parity with Java v2.0.2)
 
@@ -326,7 +326,7 @@ cargo llvm-cov --html  # HTML report in target/llvm-cov/html/index.html
 
 ## Comparison with Java Version
 
-| Aspect | Java v2.0.2 | Rust v2.0.0 |
+| Aspect | Java v2.0.2 | Rust v1.2.0 |
 | --- | --- | --- |
 | Binary Size | 50 MB + JVM | 26.4 MB (Docker) |
 | Cold Start | 2-5s | <100ms |
@@ -339,7 +339,7 @@ cargo llvm-cov --html  # HTML report in target/llvm-cov/html/index.html
 
 ---
 
-**v2.0.0 (Production Ready)**
+**v1.2.0 (Production Ready)**
 - Feature-complete parity with Java v2.0.2
 - 280 comprehensive tests across 3 phases
 - Real `rmcp` 3.1 SDK wiring (`src/mcp.rs`) — STDIO and streamable HTTP both actually serve MCP requests

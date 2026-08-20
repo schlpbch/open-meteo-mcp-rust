@@ -4,7 +4,7 @@
 
 **Open-Meteo MCP (Model Context Protocol)** is a production-ready Rust implementation of a weather and environmental data server. It provides Model Context Protocol (MCP) integration for Claude Desktop and other AI applications, exposing 11 weather/environmental tools with comprehensive real-time data access.
 
-**Current Status:** v2.0.0 - Production Ready
+**Current Status:** v1.2.0 - Production Ready
 **Test Coverage:** 280 tests | ~72% code coverage
 **Build:** Docker multi-stage | 26.4MB image
 **MCP SDK:** Official `rmcp` 3.1, wired up via `ServerHandler`/`#[tool_router]` in `src/mcp.rs`
@@ -859,5 +859,5 @@ RUST_LOG=debug ./target/release/open-meteo-mcp
 ---
 
 **Last Updated:** August 2026
-**Version:** 2.0.0
+**Version:** 1.2.0
 **Status:** Production Ready

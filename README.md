@@ -1,6 +1,6 @@
 # Open-Meteo MCP (Rust)
 
-[![Status: Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen?style=flat-square)](https://github.com/schlpbch/open-meteo-mcp-rust/releases/tag/v2.0.0)
+[![Status: Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen?style=flat-square)](https://github.com/schlpbch/open-meteo-mcp-rust/releases/tag/v1.2.0)
 [![Tests: 280](https://img.shields.io/badge/tests-280%20passing-brightgreen?style=flat-square)](tests/)
 [![Coverage: 72%](https://img.shields.io/badge/coverage-72%25-brightgreen?style=flat-square)](ARCHITECTURE.md)
 [![Rust: 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange?style=flat-square)](https://www.rust-lang.org/)
@@ -11,7 +11,7 @@ A lightweight, high-performance Model Context Protocol (MCP) server providing we
 
 **Rust port of [open-meteo-mcp-java](https://github.com/schlpbch/open-meteo-mcp-java)** — featuring a 26.4 MB Docker image with <100ms cold start and 280 comprehensive tests.
 
-**Status**: ✅ v2.0.0 - Production Ready | 72% test coverage | Feature-complete parity with Java v2.0.2
+**Status**: ✅ v1.2.0 - Production Ready | 72% test coverage | Feature-complete parity with Java v2.0.2
 
 ---
 
@@ -200,7 +200,7 @@ See [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) for architecture decisions.
 
 ## Comparison with Java Version
 
-| Aspect | Java v2.0.2 | Rust v2.0.0 |
+| Aspect | Java v2.0.2 | Rust v1.2.0 |
 | --- | --- | --- |
 | Binary Size | 50 MB + JVM | 26.4 MB (Docker) |
 | Cold Start | 2-5s | <100ms |
@@ -235,5 +235,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ---
 
 **Maintained by**: [@schlpbch](https://github.com/schlpbch)
-**Status**: ✅ v2.0.0 - Production Ready
+**Status**: ✅ v1.2.0 - Production Ready
 **Last Updated**: August 2026
