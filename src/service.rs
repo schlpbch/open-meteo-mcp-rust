@@ -40,6 +40,20 @@ impl OpenMeteoService {
         })
     }
 
+    /// Create an OpenMeteoService backed by a pre-configured [`OpenMeteoClient`]
+    ///
+    /// Primarily for tests that need to point the service at a mock server via
+    /// [`OpenMeteoClient::with_base_urls`] instead of the real Open-Meteo API.
+    pub fn with_api_client(config: Config, api_client: OpenMeteoClient) -> Self {
+        let http_client = api_client.http_client();
+        Self {
+            http_client,
+            api_client,
+            config,
+            tool_router: Self::tool_router(),
+        }
+    }
+
     /// Get a reference to the HTTP client
     pub fn http_client(&self) -> Arc<reqwest::Client> {
         self.http_client.clone()

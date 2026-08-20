@@ -1,26 +1,24 @@
-//! Shared test helpers for integration tests that call the live Open-Meteo API.
+//! Shared test helpers for integration tests that exercise the tool-handler
+//! layer against a mocked Open-Meteo API (no live network calls).
 
-use std::future::Future;
-use std::time::Duration;
+use open_meteo_mcp::client::BaseUrls;
+use open_meteo_mcp::{Config, OpenMeteoClient, OpenMeteoService};
+use std::sync::Arc;
+use wiremock::MockServer;
 
-/// Retries a live-API call up to 3 attempts total, with a short backoff between
-/// attempts, to absorb transient network failures/timeouts rather than the
-/// live-API calling test flaking outright. Does not retry on success or once
-/// attempts are exhausted — the final `Result` (success or error) is returned
-/// as-is so assertions on error content still work correctly.
-pub async fn retry_network<F, Fut, T, E>(mut f: F) -> Result<T, E>
-where
-    F: FnMut() -> Fut,
-    Fut: Future<Output = Result<T, E>>,
-{
-    const MAX_ATTEMPTS: u32 = 3;
-    let mut attempt = 0;
-    loop {
-        let result = f().await;
-        attempt += 1;
-        if result.is_ok() || attempt >= MAX_ATTEMPTS {
-            return result;
-        }
-        tokio::time::sleep(Duration::from_millis(500 * attempt as u64)).await;
-    }
+/// Builds an `OpenMeteoService` with every API base URL pointed at
+/// `mock_server`, so `latitude`/`longitude`-only tests never need to know
+/// which specific endpoint (weather, geocoding, marine, ...) they exercise.
+pub fn mock_service(mock_server: &MockServer) -> OpenMeteoService {
+    let http_client = Arc::new(reqwest::Client::new());
+    let uri = mock_server.uri();
+    let base_urls = BaseUrls {
+        weather: uri.clone(),
+        geocoding: uri.clone(),
+        air_quality: uri.clone(),
+        marine: uri.clone(),
+        archive: uri,
+    };
+    let api_client = OpenMeteoClient::with_base_urls(http_client, base_urls);
+    OpenMeteoService::with_api_client(Config::default(), api_client)
 }

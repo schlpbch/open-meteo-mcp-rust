@@ -1,45 +1,57 @@
 //! Tool handler tests for Marine Conditions
-//! Phase 4: Comprehensive marine weather tool testing
+//! Phase 4: Comprehensive marine weather tool testing, against a mocked API
 
 mod common;
 
-use common::retry_network;
-use open_meteo_mcp::OpenMeteoService;
+use common::mock_service;
+use wiremock::{matchers, Mock, MockServer, ResponseTemplate};
+
+const MARINE_FIXTURE: &str = include_str!("fixtures/marine_response.json");
+
+async fn mock_marine_server() -> MockServer {
+    let mock_server = MockServer::start().await;
+    Mock::given(matchers::method("GET"))
+        .and(matchers::path("/marine"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(MARINE_FIXTURE))
+        .mount(&mock_server)
+        .await;
+    mock_server
+}
 
 #[tokio::test]
 async fn test_get_marine_conditions_success_minimal() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
-    let result =
-        retry_network(|| service.get_marine_conditions(48.1, 11.6, None, None, None)).await;
+    let result = service
+        .get_marine_conditions(48.1, 11.6, None, None, None)
+        .await;
 
     assert!(result.is_ok());
 }
 
 #[tokio::test]
 async fn test_get_marine_conditions_with_daily() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
-    let result = retry_network(|| {
-        service.get_marine_conditions(
+    let result = service
+        .get_marine_conditions(
             48.1,
             11.6,
             None,
             Some("wave_height_max".to_string()),
             Some(5),
         )
-    })
-    .await;
+        .await;
 
     assert!(result.is_ok());
 }
 
 #[tokio::test]
 async fn test_get_marine_conditions_validation_latitude() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_marine_conditions(90.001, 11.6, None, None, None)
@@ -50,8 +62,8 @@ async fn test_get_marine_conditions_validation_latitude() {
 
 #[tokio::test]
 async fn test_get_marine_conditions_validation_longitude() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_marine_conditions(48.1, 180.001, None, None, None)
@@ -62,30 +74,32 @@ async fn test_get_marine_conditions_validation_longitude() {
 
 #[tokio::test]
 async fn test_get_marine_conditions_boundary_coordinates() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
-    let result =
-        retry_network(|| service.get_marine_conditions(90.0, 180.0, None, None, None)).await;
+    let result = service
+        .get_marine_conditions(90.0, 180.0, None, None, None)
+        .await;
 
     assert!(result.is_ok(), "Boundary coordinates should be valid");
 }
 
 #[tokio::test]
 async fn test_get_marine_conditions_forecast_days_valid_max() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
-    let result =
-        retry_network(|| service.get_marine_conditions(48.1, 11.6, None, None, Some(16))).await;
+    let result = service
+        .get_marine_conditions(48.1, 11.6, None, None, Some(16))
+        .await;
 
     assert!(result.is_ok(), "forecast_days 16 should be valid");
 }
 
 #[tokio::test]
 async fn test_get_marine_conditions_forecast_days_invalid_zero() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_marine_conditions(48.1, 11.6, None, None, Some(0))
@@ -96,10 +110,12 @@ async fn test_get_marine_conditions_forecast_days_invalid_zero() {
 
 #[tokio::test]
 async fn test_get_marine_conditions_null_island() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_marine_server().await;
+    let service = mock_service(&mock_server);
 
-    let result = retry_network(|| service.get_marine_conditions(0.0, 0.0, None, None, None)).await;
+    let result = service
+        .get_marine_conditions(0.0, 0.0, None, None, None)
+        .await;
 
     assert!(result.is_ok());
 }

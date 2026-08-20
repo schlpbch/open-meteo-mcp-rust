@@ -27,10 +27,7 @@ jobs:
         run: cargo fmt -- --check
 
       - name: Run tests
-        # --test-threads=1: tools_*_handler.rs integration tests hit the live
-        # Open-Meteo API with no mocking; running them concurrently can trigger
-        # real rate-limiting and fail even with retries (see tests/common/mod.rs)
-        run: cargo test --all-features --verbose -- --test-threads=1
+        run: cargo test --all-features --verbose
 
   coverage:
     name: Code Coverage
@@ -47,7 +44,7 @@ jobs:
       - uses: taiki-e/install-action@cargo-llvm-cov
 
       - name: Generate coverage
-        run: cargo llvm-cov --cobertura --output-path coverage.xml --all-features -- --test-threads=1
+        run: cargo llvm-cov --cobertura --output-path coverage.xml --all-features
 
       - name: Upload to codecov
         uses: codecov/codecov-action@v3

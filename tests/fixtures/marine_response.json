@@ -1,0 +1,21 @@
+{
+  "latitude": 48.1,
+  "longitude": 11.6,
+  "timezone": "UTC",
+  "hourly": {
+    "time": ["2026-02-04T00:00", "2026-02-04T01:00"],
+    "wave_height": [0.5, 0.6],
+    "wave_direction": [180, 185],
+    "wave_period": [6.0, 6.2]
+  },
+  "hourly_units": {
+    "wave_height": "m"
+  },
+  "daily": {
+    "time": ["2026-02-04"],
+    "wave_height": [0.6]
+  },
+  "daily_units": {
+    "wave_height": "m"
+  }
+}

@@ -1,19 +1,31 @@
 //! Tool handler tests for Weather/Forecast - Phase 4
-//! Comprehensive weather tool testing with all parameters
+//! Comprehensive weather tool testing with all parameters, against a mocked API
 
 mod common;
 
-use common::retry_network;
-use open_meteo_mcp::OpenMeteoService;
+use common::mock_service;
+use wiremock::{matchers, Mock, MockServer, ResponseTemplate};
 
-// ... (copy all 12 tests from tools/weather_handler_test.rs)
+const WEATHER_FIXTURE: &str = include_str!("fixtures/weather_response.json");
+
+async fn mock_weather_server() -> MockServer {
+    let mock_server = MockServer::start().await;
+    Mock::given(matchers::method("GET"))
+        .and(matchers::path("/forecast"))
+        .respond_with(ResponseTemplate::new(200).set_body_string(WEATHER_FIXTURE))
+        .mount(&mock_server)
+        .await;
+    mock_server
+}
 
 #[tokio::test]
 async fn test_get_weather_success_minimal_params() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
-    let result = retry_network(|| service.get_weather(48.1, 11.6, None, None, None, None)).await;
+    let result = service
+        .get_weather(48.1, 11.6, None, None, None, None)
+        .await;
 
     assert!(
         result.is_ok(),
@@ -23,8 +35,8 @@ async fn test_get_weather_success_minimal_params() {
 
 #[tokio::test]
 async fn test_get_weather_validation_latitude_too_high() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_weather(90.001, 11.6, None, None, None, None)
@@ -34,8 +46,8 @@ async fn test_get_weather_validation_latitude_too_high() {
 
 #[tokio::test]
 async fn test_get_weather_validation_longitude_too_high() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_weather(48.1, 180.001, None, None, None, None)
@@ -45,45 +57,48 @@ async fn test_get_weather_validation_longitude_too_high() {
 
 #[tokio::test]
 async fn test_get_weather_boundary_latitude_max() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
-    let result = retry_network(|| service.get_weather(90.0, 0.0, None, None, None, None)).await;
+    let result = service.get_weather(90.0, 0.0, None, None, None, None).await;
     assert!(result.is_ok(), "Latitude 90.0 should be valid");
 }
 
 #[tokio::test]
 async fn test_get_weather_boundary_longitude_min() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
-    let result = retry_network(|| service.get_weather(0.0, -180.0, None, None, None, None)).await;
+    let result = service
+        .get_weather(0.0, -180.0, None, None, None, None)
+        .await;
     assert!(result.is_ok(), "Longitude -180.0 should be valid");
 }
 
 #[tokio::test]
 async fn test_get_weather_null_island() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
-    let result = retry_network(|| service.get_weather(0.0, 0.0, None, None, None, None)).await;
+    let result = service.get_weather(0.0, 0.0, None, None, None, None).await;
     assert!(result.is_ok(), "Null Island should be valid");
 }
 
 #[tokio::test]
 async fn test_get_weather_forecast_days_valid_boundary() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
-    let result =
-        retry_network(|| service.get_weather(48.1, 11.6, None, None, Some(16), None)).await;
+    let result = service
+        .get_weather(48.1, 11.6, None, None, Some(16), None)
+        .await;
     assert!(result.is_ok(), "forecast_days 16 should be valid");
 }
 
 #[tokio::test]
 async fn test_get_weather_forecast_days_invalid_zero() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_weather(48.1, 11.6, None, None, Some(0), None)
@@ -93,8 +108,8 @@ async fn test_get_weather_forecast_days_invalid_zero() {
 
 #[tokio::test]
 async fn test_get_weather_forecast_days_invalid_too_high() {
-    let config = open_meteo_mcp::Config::default();
-    let service = OpenMeteoService::new(config).expect("Valid service");
+    let mock_server = mock_weather_server().await;
+    let service = mock_service(&mock_server);
 
     let result = service
         .get_weather(48.1, 11.6, None, None, Some(17), None)
