@@ -1,15 +1,15 @@
 # Open-Meteo MCP (Rust)
 
 [![Status: Production Ready](https://img.shields.io/badge/status-production%20ready-brightgreen?style=flat-square)](https://github.com/schlpbch/open-meteo-mcp-rust/releases/tag/v2.0.0)
-[![Tests: 258](https://img.shields.io/badge/tests-258%20passing-brightgreen?style=flat-square)](tests/)
+[![Tests: 280](https://img.shields.io/badge/tests-280%20passing-brightgreen?style=flat-square)](tests/)
 [![Coverage: 72%](https://img.shields.io/badge/coverage-72%25-brightgreen?style=flat-square)](ARCHITECTURE.md)
-[![Rust: 1.75+](https://img.shields.io/badge/rust-1.75%2B-orange?style=flat-square)](https://www.rust-lang.org/)
+[![Rust: 1.88+](https://img.shields.io/badge/rust-1.88%2B-orange?style=flat-square)](https://www.rust-lang.org/)
 [![License: Apache-2.0](https://img.shields.io/badge/license-Apache--2.0-blue?style=flat-square)](LICENSE)
 [![Docker: 26.4 MB](https://img.shields.io/badge/docker-26.4%20MB-blueviolet?style=flat-square)](Dockerfile)
 
-A lightweight, high-performance Model Context Protocol (MCP) server providing weather, snow conditions, air quality, and location data via the [Open-Meteo API](https://open-meteo.com/).
+A lightweight, high-performance Model Context Protocol (MCP) server providing weather, snow conditions, air quality, and location data via the [Open-Meteo API](https://open-meteo.com/), built on the official [`rmcp`](https://github.com/modelcontextprotocol/rust-sdk) 3.1 SDK.
 
-**Rust port of [open-meteo-mcp-java](https://github.com/schlpbch/open-meteo-mcp-java)** — featuring a 26.4 MB Docker image with <100ms cold start and 258 comprehensive tests.
+**Rust port of [open-meteo-mcp-java](https://github.com/schlpbch/open-meteo-mcp-java)** — featuring a 26.4 MB Docker image with <100ms cold start and 280 comprehensive tests.
 
 **Status**: ✅ v2.0.0 - Production Ready | 72% test coverage | Feature-complete parity with Java v2.0.2
 
@@ -20,8 +20,8 @@ A lightweight, high-performance Model Context Protocol (MCP) server providing we
 - ⚡ **Sub-100ms Cold Start** — Lightning-fast initialization
 - 📦 **26.4 MB Docker Image** — Lightweight distribution
 - 🎯 **11 MCP Tools** — Complete weather & climate toolkit
-- 🧪 **258 Comprehensive Tests** — Production-grade quality assurance
-- 🔄 **STDIO + SSE Transports** — Flexible deployment options
+- 🧪 **280 Comprehensive Tests** — Production-grade quality assurance
+- 🔄 **STDIO + Streamable HTTP Transports** — Real `rmcp` 3.1 SDK wiring, flexible deployment
 - 🦀 **Pure Rust** — Type-safe, memory-efficient, no GC pauses
 - 📊 **Connection Pooling** — High-performance HTTP client with retry logic
 - 🌍 **Open-Meteo API** — Free, reliable weather data source
@@ -32,7 +32,7 @@ A lightweight, high-performance Model Context Protocol (MCP) server providing we
 
 ### Prerequisites
 
-- Rust 1.75+ ([install](https://rustup.rs/))
+- Rust 1.88+ ([install](https://rustup.rs/))
 - macOS / Linux / Windows
 
 ### Installation
@@ -72,7 +72,7 @@ cargo build --release
 
 3. Restart Claude Desktop
 
-#### HTTP (SSE Transport)
+#### HTTP (Streamable HTTP Transport)
 
 ```bash
 # Terminal 1: Start server
@@ -80,6 +80,12 @@ cargo run -- --transport sse --port 8888
 
 # Terminal 2: Test
 curl http://localhost:8888/health
+
+# MCP protocol endpoint (POST, JSON-RPC over rmcp's streamable-HTTP transport)
+curl -X POST http://localhost:8888/sse \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-06-18","capabilities":{},"clientInfo":{"name":"test","version":"0.0.1"}}}'
 ```
 
 ## Features
@@ -132,7 +138,7 @@ TRANSPORT=stdio        # "stdio" or "sse" (default: stdio)
 # Build
 cargo build --release
 
-# Test (258 tests)
+# Test (280 tests)
 cargo test --all-features
 
 # Format check
@@ -145,11 +151,10 @@ cargo clippy --all-targets
 cargo llvm-cov --html  # Report in target/llvm-cov/html/index.html
 ```
 
-### Test Suite (258 tests)
+### Test Suite (280 tests)
 
-- **Library Tests** (78): Configuration, error handling, types
-- **Phase 4 Tool Handler Tests** (91): Parameter validation, boundary testing
-- **Phase 5 Service Layer Tests** (89): Error conversion, configuration management, service orchestration
+- **Library Tests** (81): Configuration, error handling, types, `rmcp` tool router wiring
+- **Integration Tests** (199): Tool handler validation/boundary testing, service layer, error conversion, configuration management
 
 ### Project Structure
 
@@ -160,11 +165,12 @@ src/
 ├── config.rs        # Configuration
 ├── error.rs         # Error types
 ├── service.rs       # Core service
+├── mcp.rs           # rmcp SDK wiring (ServerHandler, tool router, resources, prompts)
 ├── tools/           # Tool implementations
 ├── client/          # HTTP clients (Phase 1)
 ├── resources/       # MCP resources (Phase 3)
 ├── prompts/         # MCP prompts (Phase 3)
-└── transport/       # Transport implementations (Phase 4)
+└── transport/       # Transport implementations (STDIO + streamable HTTP)
 ```
 
 ## Architecture
@@ -174,8 +180,8 @@ See [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) for architecture decisions.
 **Key Decisions:**
 - **Async**: Tokio 1.x runtime
 - **HTTP**: reqwest with connection pooling
-- **MCP SDK**: Official `rmcp` 0.3+
-- **Transport**: STDIO (Phase 0), SSE (Phase 4)
+- **MCP SDK**: Official `rmcp` 3.1
+- **Transport**: STDIO, streamable HTTP (`/sse`) — both served via `rmcp`'s `ServiceExt`/`StreamableHttpService`
 - **Testing**: Unit + Integration, 72% coverage target
 
 ## Development Roadmap
@@ -187,7 +193,7 @@ See [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) for architecture decisions.
 | 2 | 11 tool implementations | ✅ Complete |
 | 3 | Resources & prompts | ✅ Complete |
 | 4 | STDIO + SSE transports | ✅ Complete |
-| 5 | Testing & coverage (72%) | ✅ Complete (258 tests) |
+| 5 | Testing & coverage (72%) | ✅ Complete (280 tests) |
 | 6 | Docker & CD pipeline | ✅ Complete |
 
 **Status**: All phases complete | Feature-complete parity with Java v2.0.2
@@ -200,9 +206,9 @@ See [spec/ADR_COMPENDIUM.md](spec/ADR_COMPENDIUM.md) for architecture decisions.
 | Cold Start | 2-5s | <100ms |
 | Memory (idle) | ~150 MB | 50-100 MB |
 | Dependencies | 100+ (Maven) | ~16 direct (Cargo) |
-| Transport | REST + MCP + Chat | STDIO + SSE |
+| Transport | REST + MCP + Chat | STDIO + Streamable HTTP |
 | Chat Endpoint | ✅ Included | ❌ Client-side only |
-| Test Coverage | 72% (426 tests) | ✅ 72% (258 tests) |
+| Test Coverage | 72% (426 tests) | ✅ 72% (280 tests) |
 | Architecture Docs | Basic | ✅ Enhanced (mermaid diagrams) |
 
 ## Documentation
@@ -229,5 +235,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ---
 
 **Maintained by**: [@schlpbch](https://github.com/schlpbch)
-**Status**: ✅ v1.0.0 - Production Ready
-**Last Updated**: February 2026
+**Status**: ✅ v2.0.0 - Production Ready
+**Last Updated**: August 2026

@@ -5,8 +5,9 @@
 **Open-Meteo MCP (Model Context Protocol)** is a production-ready Rust implementation of a weather and environmental data server. It provides Model Context Protocol (MCP) integration for Claude Desktop and other AI applications, exposing 11 weather/environmental tools with comprehensive real-time data access.
 
 **Current Status:** v2.0.0 - Production Ready
-**Test Coverage:** 258 tests | ~72% code coverage
+**Test Coverage:** 280 tests | ~72% code coverage
 **Build:** Docker multi-stage | 26.4MB image
+**MCP SDK:** Official `rmcp` 3.1, wired up via `ServerHandler`/`#[tool_router]` in `src/mcp.rs`
 
 ---
 
@@ -100,6 +101,8 @@ graph TB
     Health["health.rs<br/>(Health Checks)"]
 
     Service["service.rs<br/>(Orchestration)"]
+    Mcp["mcp.rs<br/>(rmcp ServerHandler,<br/>#[tool_router])"]
+    Transport["transport/<br/>(STDIO + Streamable HTTP)"]
 
     subgraph Tools["Tools Module<br/>(11 tool handlers)"]
         Weather["weather.rs"]
@@ -135,8 +138,11 @@ graph TB
     Prompts["prompts/<br/>(Prompt Templates)"]
 
     Main --> Config
-    Main --> Service
+    Main --> Transport
     Main --> Health
+
+    Transport --> Mcp
+    Mcp --> Service
 
     Service --> Tools
     Service --> Resources
@@ -155,6 +161,8 @@ graph TB
 
     style Main fill:#bbdefb
     style Service fill:#fff3e0
+    style Mcp fill:#ffe082
+    style Transport fill:#b3e5fc
     style Tools fill:#f3e5f5
     style Types fill:#e8f5e9
     style Client fill:#ffe0b2
@@ -167,10 +175,25 @@ graph TB
 
 ### Core Modules
 
+#### `/src/mcp.rs` - rmcp SDK Wiring
+**Responsibility:** Bridges the business-logic layer to the real `rmcp` 3.1 `ServerHandler`
+
+- `Parameters<T>` request structs (one per tool, `Deserialize` + `JsonSchema`) for MCP-generated JSON schemas
+- `#[tool_router]` impl on `OpenMeteoService` with 12 `#[tool]`-annotated wrapper methods
+  (`tool_get_weather`, `tool_ping`, etc.) that call the existing business-logic methods and
+  convert their result via `to_rmcp_result()`/`to_rmcp_error()`
+- `impl ServerHandler for OpenMeteoService` (`#[tool_handler(router = self.tool_router)]`):
+  - `get_info()` — declares tools/resources/prompts capabilities, server name/version
+  - `list_resources()`/`read_resource()` — manual dispatch over the 4 static resources (rmcp has no macro for resources)
+  - `list_prompts()`/`get_prompt()` — manual dispatch over the 3 prompts, extracting arguments from the request's `JsonObject`
+- Kept deliberately separate from `src/tools/*.rs`/`src/resources/mod.rs`/`src/prompts/mod.rs` so
+  those keep returning the project's own `CallToolResult`/`McpError` and their existing tests
+  don't need to know about `rmcp`'s wire types
+
 #### `/src/service.rs` - Main Service Layer
 **Responsibility:** Service orchestration and lifecycle management
 
-- `OpenMeteoService` struct - Entry point for all MCP operations
+- `OpenMeteoService` struct - Entry point for all MCP operations, `Clone`, holds the `ToolRouter<Self>` used by `src/mcp.rs`
 - HTTP client connection pooling via `Arc<reqwest::Client>`
 - Configuration application and initialization
 - Methods:
@@ -302,6 +325,14 @@ graph TB
 - Ski trip planning prompt
 - Outdoor activity planning prompt
 - Weather-aware travel planning prompt
+
+#### `/src/transport/` - Transport Implementations
+**Responsibility:** Serving the MCP protocol over STDIO and streamable HTTP
+
+- `stdio.rs` - `run_stdio_server()`: `(*service).clone().serve(rmcp::transport::stdio()).await?.waiting().await?`
+- `sse.rs` - `run_server()`: axum router with `/`, `/health`, `/ready`, `/sse/info`, and `/sse`
+  nested via `rmcp::transport::streamable_http_server::StreamableHttpService` (POST, JSON-RPC,
+  `LocalSessionManager` for session state)
 
 ---
 
@@ -575,23 +606,27 @@ flowchart TD
 
 ## Testing Architecture
 
-### Test Suite Organization (258 tests)
+### Test Suite Organization (280 tests)
 
-**Library Unit Tests (78 tests)**
+**Library Unit Tests (81 tests)**
 - Type validation tests
 - Error handling tests
+- `rmcp` tool router registration and `get_info()` capabilities (`src/mcp.rs`)
 - Basic functionality tests
 
-**Phase 4: Tool Handler Tests (91 tests)**
+**Tool Handler Tests (105 tests)**
 - Parameter validation (positive/negative cases)
 - Boundary value testing (±90°, ±180° coordinates)
 - Tool-specific ranges (forecast_days: 1-16, AQI: 1-5)
 - Error handling and edge cases
 
-**Phase 5: Service Layer Tests (89 tests)**
+**Service Layer Tests (89 tests)**
 - Error type creation and conversion (37 tests)
 - Configuration management (35 tests)
 - Service orchestration (17 tests)
+
+**End-to-End Integration Tests (5 tests)**
+- Cross-cutting scenarios in `tests/integration_test.rs`
 
 ### Test Patterns
 
@@ -780,8 +815,8 @@ RUST_LOG=open_meteo_mcp=debug ./target/release/open-meteo-mcp
 
 ### Check Service Health
 ```bash
-curl http://localhost:8888/health/live
-curl http://localhost:8888/health/ready
+curl http://localhost:8888/health
+curl http://localhost:8888/ready
 ```
 
 ### Verify Configuration
@@ -805,6 +840,12 @@ RUST_LOG=debug ./target/release/open-meteo-mcp
 - Service implements automatic retry with backoff
 - Consider implementing client-side request queuing
 
+**Tool handler tests fail intermittently in network-restricted environments**
+- `tests/tools_*_handler.rs` call the live Open-Meteo API directly (no mocking)
+- In a sandbox with blocked/unreliable outbound network, tests like
+  `tools_snow_handler.rs` can flake; this is independent of any code change —
+  verify by re-running with `cargo test -- --test-threads=1`
+
 ---
 
 ## References
@@ -817,6 +858,6 @@ RUST_LOG=debug ./target/release/open-meteo-mcp
 
 ---
 
-**Last Updated:** February 2026
+**Last Updated:** August 2026
 **Version:** 2.0.0
 **Status:** Production Ready

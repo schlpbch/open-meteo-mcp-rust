@@ -1,7 +1,8 @@
 # Architecture Decision Records (ADRs) — Open-Meteo MCP Rust
 
-**Project:** `open-meteo-mcp-rust` **Status:** Initial ADRs for v0.1.0 **Last
-Updated:** 2026-02-04
+**Project:** `open-meteo-mcp-rust` **Status:** Initial ADRs for v0.1.0, with
+in-place updates as decisions evolved (see ADR-003, ADR-004, ADR-008, ADR-011)
+**Last Updated:** 2026-08-20
 
 ---
 
@@ -106,7 +107,15 @@ impl OpenMeteoService {
 
 ## ADR-003: Transport Layer — STDIO for Phase 0-1, SSE in Phase 4, Defer Streamable HTTP
 
-**Status:** ACCEPTED
+**Status:** ACCEPTED — superseded in practice, August 2026
+
+**Update (August 2026):** `rmcp`'s streamable HTTP matured well before v1.0 and is no
+longer experimental (see ADR-004 update). The `/sse` HTTP endpoint (`src/transport/sse.rs`)
+now serves `rmcp::transport::streamable_http_server::StreamableHttpService` directly
+(POST, JSON-RPC) rather than the plain GET SSE stream this ADR anticipated — the
+deferred "Streamable HTTP" row below effectively arrived under the existing `/sse`
+route name instead of a new one. The rationale and STDIO-first sequencing below stand;
+only the "defer streamable HTTP" consequence is no longer current.
 
 **Context:** MCP supports multiple transports for client-server communication:
 
@@ -186,7 +195,16 @@ transport.run(server).await?;
 
 ## ADR-004: MCP SDK — Use Official `rmcp` 0.3+
 
-**Status:** ACCEPTED
+**Status:** ACCEPTED — updated August 2026
+
+**Update (August 2026):** The dependency stayed pinned at `rmcp` 1.3 without ever
+being wired into the code for several releases — `ServerHandler` was never
+implemented, so STDIO/SSE just blocked on a shutdown signal. As of this update the
+crate is on `rmcp` 3.1 and is actually wired up in `src/mcp.rs`: a `#[tool_router]`
+impl provides the 11 domain tools plus `ping`, and a manual `ServerHandler` impl
+handles resources and prompts (rmcp has no macro for those). See `src/mcp.rs` for
+the current pattern before following the example below, which reflects the
+original 0.3-era plan.
 
 **Context:** The `rmcp` crate is the official Rust SDK for MCP (merged from
 4t145/rmcp). Alternatives:
@@ -422,7 +440,17 @@ strategy:
 
 ## ADR-008: Tool Definition — `#[tool]` Macro with serde/schemars for Parameter Validation
 
-**Status:** ACCEPTED
+**Status:** ACCEPTED — pattern updated August 2026
+
+**Update (August 2026):** The `#[tool]` macro in `rmcp` 3.x takes a single
+`Parameters<T>`-wrapped struct argument, not `#[tool_param]`-annotated individual
+scalar arguments as sketched below. The actual implementation in `src/mcp.rs`
+splits each tool into two layers: the business-logic method (in `src/tools/*.rs`,
+unchanged scalar-argument signature, unaware of `rmcp`) plus a thin `#[tool]`
+wrapper in `src/mcp.rs` that destructures `Parameters<XParams>` and calls it. This
+keeps `rmcp`'s wire types out of the business-logic layer and its 280 tests. See
+`src/mcp.rs` for the current pattern; the code block below is the original 0.3-era
+sketch.
 
 **Context:** How to define MCP tools? The `rmcp` crate provides `#[tool]` macro
 which:
@@ -679,7 +707,16 @@ pub async fn get_weather(&self, lat: f64, lon: f64) -> Result<CallToolResult, Mc
 
 ## ADR-011: Testing Strategy — Unit + Integration + Fixtures
 
-**Status:** ACCEPTED
+**Status:** ACCEPTED — mocking layer not adopted in practice, corrected August 2026
+
+**Update (August 2026):** The `mockall`-based unit-test layer sketched below was
+never implemented — `mockall` was a declared dev-dependency with zero references
+anywhere in `src/` or `tests/`, and has since been removed from `Cargo.toml`.
+Tool-handler tests (`tests/tools_*_handler.rs`, 105 tests) instead call the live
+Open-Meteo API directly with no mocking; this makes them flake in
+network-restricted environments (see ARCHITECTURE.md's Troubleshooting section)
+but keeps them honest against the real API contract. `wiremock` is used, but only
+by the client-layer tests. Current total: 280 tests, 72% coverage target unchanged.
 
 **Context:** Target: 72% code coverage (parity with Java version). Need strategy
 for:
@@ -824,20 +861,20 @@ async fn test_get_weather_integration() {
 - Prefer smaller, focused crates (e.g., `thiserror` not `eyre`)
 - Avoid beta/pre-release deps
 
-**Current Direct Dependencies (Phase 0):**
+**Current Direct Dependencies (August 2026, updated from the Phase 0 snapshot):**
 
 ```toml
 [dependencies]
-rmcp = "0.3"           # Official MCP SDK
+rmcp = "3.1"           # Official MCP SDK — now actually wired into ServerHandler (src/mcp.rs)
 tokio = "1"            # Async runtime
-reqwest = "0.12"       # HTTP client
+reqwest = "0.13"       # HTTP client
 serde = "1"            # Serialization
 serde_json = "1"       # JSON support
 schemars = "1"         # JSON schema generation
-axum = "0.7"           # Web framework
-tower = "0.4"          # Middleware
-tower-http = "0.5"     # HTTP utilities
-thiserror = "1"        # Error types
+axum = "0.8"           # Web framework
+tower = "0.5"          # Middleware
+tower-http = "0.7"     # HTTP utilities
+thiserror = "2"        # Error types
 anyhow = "1"           # Error context
 dotenvy = "0.15"       # .env loading
 envy = "0.4"           # Env var deserialization
@@ -845,9 +882,13 @@ tracing = "0.1"        # Structured logging
 tracing-subscriber = "0.3"
 chrono = "0.4"         # DateTime
 clap = "4.5"           # CLI argument parsing
+futures = "0.3"        # Async utilities
 
-# Total: 16 direct, ~40 transitive
+# Total: 17 direct, ~159 transitive (176 unique packages in the runtime tree)
 ```
+
+`mockall` was a declared dev-dependency with zero actual usage (see the ADR-011
+update above) and has been removed.
 
 **Security Audit Process:**
 
@@ -885,22 +926,20 @@ cargo audit && cargo outdated
 | --- | ----------------- | ------------------------------------------------------- | -------- |
 | 001 | Async Runtime     | Tokio 1.x                                               | ACCEPTED |
 | 002 | Concurrency Model | Per-request tasks, shared client                        | ACCEPTED |
-| 003 | Transport Layer   | STDIO→Phase 0, SSE→Phase 4, defer Stream HTTP           | ACCEPTED |
-| 004 | MCP SDK           | Official `rmcp` 0.3+                                    | ACCEPTED |
+| 003 | Transport Layer   | STDIO + streamable HTTP (`/sse`), both via `rmcp`       | ACCEPTED (updated Aug 2026) |
+| 004 | MCP SDK           | Official `rmcp` 3.1, wired into `ServerHandler`         | ACCEPTED (updated Aug 2026) |
 | 005 | Code Organization | Monolithic v0.1, workspace at v1.0+                     | ACCEPTED |
 | 006 | Release Strategy  | GH Releases v0.1, crates.io v0.2+, cargo-binstall v1.0+ | ACCEPTED |
 | 007 | CI/CD             | GitHub Actions + cross-compilation                      | ACCEPTED |
-| 008 | Tool Definition   | `#[tool]` macro + serde + schemars                      | ACCEPTED |
+| 008 | Tool Definition   | `#[tool]` macro (`Parameters<T>`) + serde + schemars    | ACCEPTED (updated Aug 2026) |
 | 009 | Error Handling    | `thiserror` + `anyhow`, convert to `McpError`           | ACCEPTED |
 | 010 | Logging           | Structured JSON with `tracing`                          | ACCEPTED |
-| 011 | Testing           | Unit + Integration + Fixtures, target 72% coverage      | ACCEPTED |
+| 011 | Testing           | Unit + Integration (no mocking layer), 280 tests, 72% coverage | ACCEPTED (updated Aug 2026) |
 | 012 | Dependencies      | ≤30 direct, pin major versions, audit monthly           | ACCEPTED |
 
 ---
 
-**Next Steps:**
-
-1. Review and approve/modify ADRs
-2. Proceed with Phase 0 implementation (Scaffolding)
-3. Create GitHub issues for each phase
-4. Document ADRs in project repo (spec/ADR_COMPENDIUM.md)
+**Status (August 2026):** All phases (0–6) plus the `rmcp` 3.1 SDK wiring
+described in the ADR-003/004/008/011 updates above are complete. See
+[CLAUDE.md](../CLAUDE.md) and [ARCHITECTURE.md](../ARCHITECTURE.md) for the
+current system state.
