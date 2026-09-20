@@ -12,7 +12,7 @@ use rmcp::handler::server::wrapper::Parameters;
 use rmcp::model::{
     ErrorData, GetPromptRequestParams, GetPromptResult, ListPromptsResult, ListResourcesResult,
     Prompt, PromptArgument, PromptMessage, ReadResourceRequestParams, ReadResourceResult, Resource,
-    ResourceContents, Role, ServerCapabilities, ServerInfo,
+    ResourceContents, Role, ServerCapabilities, ServerConfig,
 };
 use rmcp::service::RequestContext;
 use rmcp::{tool, tool_handler, tool_router, RoleServer, ServerHandler};
@@ -458,8 +458,8 @@ fn arg_str(arguments: &Option<rmcp::model::JsonObject>, key: &str) -> Option<Str
 
 #[tool_handler(router = self.tool_router)]
 impl ServerHandler for OpenMeteoService {
-    fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(
+    fn get_info(&self) -> ServerConfig {
+        ServerConfig::new(
             ServerCapabilities::builder()
                 .enable_tools()
                 .enable_resources()
